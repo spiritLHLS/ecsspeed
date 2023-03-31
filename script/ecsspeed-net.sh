@@ -351,7 +351,12 @@ speed_test() {
         local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
         local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
         if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-            printf "%-16s  %-16s%-16s%-10s%-10s\n" "${nodeName}" "${up_speed}" "${dl_speed}" "${latency}" "${packet_loss}"
+            echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t $packet_loss"
+            # if [[ $nodeName =~ (电信|联通|移动) ]]; then
+            #     printf "%-16s%-16s%-16s%-10s%-10s\n" "${nodeName}" "${up_speed}" "${dl_speed}" "${latency}" "${packet_loss}"
+            # else
+            #     echo -e "$nodeName\t\t$up_speed\t$dl_speed\t\t$latency\t$packet_loss"
+            # fi
         fi
     fi
     wait
@@ -369,31 +374,69 @@ function test_list() {
 }
 
 temp_head(){
-    echo "——————————————————————————————————————————————————————————————————————————————"
-	echo -e "位置\t\t上传速度\t下载速度\t延迟\t  丢包率"
+    if [[ $selection =~ ^[1-6]$ ]]; then
+        echo "——————————————————————————————————————————————————————————————————————————————"
+	    echo -e "位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
+    else
+        echo "——————————————————————————————————————————————————————————————————————————————"
+	    echo -e "位置\t 上传速度\t下载速度\t 延迟\t 丢包率"
+    fi
 }
 
+cdn_urls=("https://cdn.spiritlhl.workers.dev/" "https://shrill-pond-3e81.hunsh.workers.dev/" "https://ghproxy.com/" "http://104.168.128.181:7823/" "https://gh.api.99988866.xyz/")
+
+check_cdn() {
+    _yellow "checking CDN"
+    local o_url=$1
+    for cdn_url in "${cdn_urls[@]}"; do
+        if curl -sL -k "$cdn_url$o_url" --max-time 6 | grep -q "success" > /dev/null 2>&1; then
+        export cdn_success_url="$cdn_url"
+        return
+        fi
+        sleep 0.5
+    done
+    export cdn_success_url=""
+}
 
 get_data() {
     local url="$1"
     local data=()
+    local response
+    local retries=0
+    while [[ $retries -lt 3 ]]; do
+        response=$(curl -s --max-time 3 "$url")
+        if [[ $? -eq 0 ]]; then
+            break
+        else
+            retries=$((retries+1))
+            sleep 1
+        fi
+    done
+    if [[ $retries -eq 3 ]]; then
+        url="${cdn_success_url}${url}"
+        response=$(curl -s --max-time 6 "$url")
+    fi
     while read line; do
         if [[ -n "$line" ]]; then
             local id=$(echo "$line" | awk -F ',' '{print $1}')
-            local city=$(echo "$line" | awk -F ',' '{print $4}')
+            local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $4}')
+            if [[ "$id,$city" == "id,city" ]]; then
+                continue
+            fi
             if [[ $url == *"Mobile"* ]]; then
                 city="移动${city}"
             elif [[ $url == *"Telecom"* ]]; then
                 city="电信${city}"
             elif [[ $url == *"Unicom"* ]]; then
                 city="联通${city}" 
+            else
+                city="${city}  "
             fi
             data+=("$id,$city")
         fi
-    done < <(curl -s "$url")
+    done <<< "$response"
     echo "${data[@]}"
 }
-
 
 checkserverid(){
     _yellow "checking speedtest server ID"
@@ -402,7 +445,7 @@ checkserverid(){
     CN_Unicom=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/CN_Unicom.csv"))
     HK=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/HK.csv"))
     TW=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/TW.csv"))
-    # echo "${CN_Mobile[1]}"
+    # echo "${TW[@]}"
 }
 
 preinfo() {
@@ -416,8 +459,8 @@ preinfo() {
 selecttest() {
 	echo -e "  测速类型:    ${GREEN}1.${PLAIN} 三网测速    ${GREEN}2.${PLAIN} 取消测速"
 	echo -e "               ${GREEN}3.${PLAIN} 联通节点    ${GREEN}4.${PLAIN} 电信节点    ${GREEN}5.${PLAIN} 移动节点"
-    echo -e "               ${GREEN}6.${PLAIN} 香港节点    ${GREEN}7.${PLAIN} 台湾节点"
-	echo -ne "               ${GREEN}8.${PLAIN} 详细三网测速"
+    echo -e "               ${GREEN}6.${PLAIN} 详细三网测速 "
+	echo -ne "               ${GREEN}7.${PLAIN} 香港节点    ${GREEN}8.${PLAIN} 台湾节点"
 	while :; do echo
 			read -p "  请输入数字选择测速类型: " selection
 			if [[ ! $selection =~ ^[1-8]$ ]]; then
@@ -431,17 +474,17 @@ selecttest() {
 runtest() {
     if [[ ${selection} == 8 ]]; then
 		temp_head
-        test_list "${CN_Unicom[@]}"
-        test_list "${CN_Telecom[@]}"
-        test_list "${CN_Mobile[@]}"
+        test_list "${TW[@]}"
     fi
     if [[ ${selection} == 7 ]]; then
 		temp_head
-        test_list "${TW[@]}"
+        test_list "${HK[@]}"
     fi
     if [[ ${selection} == 6 ]]; then
 		temp_head
-        test_list "${HK[@]}"
+        test_list "${CN_Unicom[@]}"
+        test_list "${CN_Telecom[@]}"
+        test_list "${CN_Mobile[@]}"
     fi
     if [[ ${selection} == 5 ]]; then
 		temp_head
@@ -480,6 +523,7 @@ SystemInfo_GetOSRelease
 SystemInfo_GetSystemBit
 Check_JSONQuery
 install_speedtest
+check_cdn
 checkserverid
 csv_date=$(curl -s https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
 main
