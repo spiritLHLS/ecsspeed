@@ -345,17 +345,33 @@ speed_test() {
     [ -z "$1" ] && ./speedtest-cli/speedtest --progress=no --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1 || \
     ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
     if [ $? -eq 0 ]; then
-        # cat ./speedtest-cli/speedtest.log
         local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
         local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
         local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
         local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
         if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-            echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t ${packet_loss}"
+            printf "%-16s  %-16s%-16s%-10s%-10s\n" "${nodeName}" "${up_speed}" "${dl_speed}" "${latency}" "${packet_loss}"
         fi
     fi
     wait
 }
+
+function test_list() {
+    local list=("$@")
+    for ((i=0; i<${#list[@]}; i+=1))
+    do
+        id=$(echo "${list[i]}" | cut -d',' -f1)
+        name=$(echo "${list[i]}" | cut -d',' -f2)
+        # echo "$id $name"
+        speed_test "$id" "$name"
+    done
+}
+
+temp_head(){
+    echo "——————————————————————————————————————————————————————————————————————————————"
+	echo -e "位置\t\t上传速度\t下载速度\t延迟\t  丢包率"
+}
+
 
 get_data() {
     local url="$1"
@@ -364,6 +380,13 @@ get_data() {
         if [[ -n "$line" ]]; then
             local id=$(echo "$line" | awk -F ',' '{print $1}')
             local city=$(echo "$line" | awk -F ',' '{print $4}')
+            if [[ $url == *"Mobile"* ]]; then
+                city="移动${city}"
+            elif [[ $url == *"Telecom"* ]]; then
+                city="电信${city}"
+            elif [[ $url == *"Unicom"* ]]; then
+                city="联通${city}" 
+            fi
             data+=("$id,$city")
         fi
     done < <(curl -s "$url")
@@ -391,7 +414,7 @@ preinfo() {
 
 selecttest() {
 	echo -e "  测速类型:    ${GREEN}1.${PLAIN} 三网测速    ${GREEN}2.${PLAIN} 取消测速"
-	echo -e "               ${GREEN}3.${PLAIN} 移动节点    ${GREEN}4.${PLAIN} 电信节点    ${GREEN}5.${PLAIN} 联通节点"
+	echo -e "               ${GREEN}3.${PLAIN} 联通节点    ${GREEN}4.${PLAIN} 电信节点    ${GREEN}5.${PLAIN} 移动节点"
     echo -e "               ${GREEN}6.${PLAIN} 香港节点    ${GREEN}7.${PLAIN} 台湾节点"
 	echo -ne "               ${GREEN}8.${PLAIN} 详细三网测速"
 	while :; do echo
@@ -404,29 +427,12 @@ selecttest() {
 	done
 }
 
-function test_list() {
-    local list=("$@")
-    for ((i=0; i<${#list[@]}; i+=1))
-    do
-        id=$(echo "${list[i]}" | cut -d',' -f1)
-        name=$(echo "${list[i]}" | cut -d',' -f2)
-        # echo "$id $name"
-        speed_test "$id" "$name"
-    done
-}
-
-temp_head(){
-    echo "——————————————————————————————————————————————————————————"
-	echo -e "测速点位置\t 上传速度\t 下载速度\t 延迟"
-}
-
-
 runtest() {
     if [[ ${selection} == 8 ]]; then
 		temp_head
-        test_list "${CN_Mobile[@]}"
-        test_list "${CN_Telecom[@]}"
         test_list "${CN_Unicom[@]}"
+        test_list "${CN_Telecom[@]}"
+        test_list "${CN_Mobile[@]}"
     fi
     if [[ ${selection} == 7 ]]; then
 		temp_head
@@ -438,7 +444,7 @@ runtest() {
     fi
     if [[ ${selection} == 5 ]]; then
 		temp_head
-        test_list "${CN_Mobile[@]}"
+        test_list "${CN_Unicom[@]}"
     fi
     if [[ ${selection} == 4 ]]; then
 		temp_head
@@ -446,7 +452,7 @@ runtest() {
     fi
     if [[ ${selection} == 3 ]]; then
 		temp_head
-        test_list "${CN_Unicom[@]}"
+        test_list "${CN_Mobile[@]}"
     fi
     [[ ${selection} == 2 ]] && exit 1
     if [[ ${selection} == 1 ]]; then
