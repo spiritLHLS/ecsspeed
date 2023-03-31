@@ -391,6 +391,23 @@ temp_head(){
     fi
 }
 
+print_end_time() {
+    echo "——————————————————————————————————————————————————————————————————————————————"
+    end_time=$(date +%s)
+    time=$(( ${end_time} - ${start_time} ))
+    if [ ${time} -gt 60 ]; then
+        min=$(expr $time / 60)
+        sec=$(expr $time % 60)
+        echo " 总共花费      : ${min} 分 ${sec} 秒"
+    else
+        echo " 总共花费      : ${time} 秒"
+    fi
+    date_time=$(date)
+    # date_time=$(date +%Y-%m-%d" "%H:%M:%S)
+    echo " 时间          : $date_time"
+    echo "——————————————————————————————————————————————————————————————————————————————"
+}
+
 cdn_urls=("https://cdn.spiritlhl.workers.dev/" "https://shrill-pond-3e81.hunsh.workers.dev/" "https://ghproxy.com/" "http://104.168.128.181:7823/" "https://gh.api.99988866.xyz/")
 
 check_cdn() {
@@ -603,6 +620,7 @@ runtest() {
 main() {
     preinfo
     selecttest
+    start_time=$(date +%s)
     runtest
     rm -rf speedtest*
 }
@@ -620,3 +638,4 @@ install_speedtest
 check_cdn
 csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
 main
+print_end_time
