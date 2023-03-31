@@ -4,6 +4,7 @@
 
 
 ecsspeednetver="2023/03/31"
+SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
@@ -89,12 +90,20 @@ checktar() {
     _yellow "checking tar"
 	if  [ ! -e '/usr/bin/tar' ]; then
             _yellow "Installing tar"
-	        ${PACKAGE_INSTALL[int]} tar
+	        ${PACKAGE_INSTALL[int]} tar 
 	fi
     if [ $? -ne 0 ]; then
         apt-get -f install > /dev/null 2>&1
-        ${PACKAGE_INSTALL[int]} tar
+        ${PACKAGE_INSTALL[int]} tar > /dev/null 2>&1
     fi
+}
+
+checkping() {
+    _yellow "checking ping"
+	if  [ ! -e '/usr/bin/ping' ]; then
+            _yellow "Installing ping"
+	        ! ${PACKAGE_INSTALL[int]} iputils-ping || ${PACKAGE_INSTALL[int]} ping > /dev/null 2>&1
+	fi
 }
 
 SystemInfo_GetOSRelease() {
@@ -351,19 +360,18 @@ speed_test() {
         local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
         local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
         if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-            echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t $packet_loss"
-            # if [[ $nodeName =~ (电信|联通|移动) ]]; then
-            #     printf "%-16s%-16s%-16s%-10s%-10s\n" "${nodeName}" "${up_speed}" "${dl_speed}" "${latency}" "${packet_loss}"
-            # else
-            #     echo -e "$nodeName\t\t$up_speed\t$dl_speed\t\t$latency\t$packet_loss"
-            # fi
+            echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
         fi
     fi
     wait
 }
 
-function test_list() {
+test_list() {
     local list=("$@")
+    if [ ${#list[@]} -eq 0 ]; then
+        echo "列表为空，程序退出"
+        exit 1
+    fi
     for ((i=0; i<${#list[@]}; i+=1))
     do
         id=$(echo "${list[i]}" | cut -d',' -f1)
@@ -429,8 +437,6 @@ get_data() {
                 city="电信${city}"
             elif [[ $url == *"Unicom"* ]]; then
                 city="联通${city}" 
-            else
-                city="${city}  "
             fi
             data+=("$id,$city")
         fi
@@ -438,15 +444,74 @@ get_data() {
     echo "${data[@]}"
 }
 
-checkserverid(){
-    _yellow "checking speedtest server ID"
-    CN_Mobile=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/CN_Mobile.csv"))
-    CN_Telecom=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/CN_Telecom.csv"))
-    CN_Unicom=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/CN_Unicom.csv"))
-    HK=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/HK.csv"))
-    TW=($(get_data "https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/TW.csv"))
-    # echo "${TW[@]}"
+ping_test() {
+    local ip="$1"
+    local result="$(ping -c1 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
+    echo "$ip,$result"
 }
+
+get_nearest_data() {
+    local url="$1"
+    local data=()
+    local response
+    local retries=0
+    while [[ $retries -lt 2 ]]; do
+        response=$(curl -s --max-time 6 "$url")
+        if [[ $? -eq 0 ]]; then
+            break
+        else
+            retries=$((retries+1))
+            sleep 1
+        fi
+    done
+    if [[ $retries -eq 2 ]]; then
+        url="${cdn_success_url}${url}"
+        response=$(curl -s --max-time 6 "$url")
+    fi
+    while read line; do
+        if [[ -n "$line" ]]; then
+            local id=$(echo "$line" | awk -F ',' '{print $1}')
+            local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $4}')
+            local ip=$(echo "$line" | awk -F ',' '{print $5}')
+            if [[ "$id,$city,$ip" == "id,city,ip" ]]; then
+                continue
+            fi
+            if [[ $url == *"Mobile"* ]]; then
+                city="移动${city}"
+            elif [[ $url == *"Telecom"* ]]; then
+                city="电信${city}"
+            elif [[ $url == *"Unicom"* ]]; then
+                city="联通${city}" 
+            fi
+            data+=("$id,$city,$ip")
+        fi
+    done <<< "$response"
+    
+    # 并行ping测试所有IP
+    for (( i=0; i<${#data[@]}; i++ )); do
+        ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
+        results[$i]=$(ping_test "$ip" &)
+    done
+    wait # 等待所有并行ping测试完成
+    
+    # 将测试结果和data数组合并
+    for (( i=0; i<${#data[@]}; i++ )); do
+        ping_result=$(echo "${results[$i]}" | awk -F ',' '{print $2}')
+        data[$i]="${data[$i]},$ping_result"
+    done
+    
+    # 按ping值排序并取前两个id
+    sorted_data=($(echo "${data[@]}" | tr ' ' '\n' | sort -t',' -k4 -n | head -n 2))
+    
+    # 去除IP信息
+    for (( i=0; i<${#sorted_data[@]}; i++ )); do
+        sorted_data[$i]=$(echo "${sorted_data[$i]}" | awk -F ',' '{print $1","$2}')
+    done
+    
+    # 返回结果
+    echo "${sorted_data[@]}"
+}
+
 
 preinfo() {
 	echo "———————————————————————————————— ecsspeed-net ————————————————————————————————"
@@ -472,39 +537,68 @@ selecttest() {
 }
 
 runtest() {
-    if [[ ${selection} == 8 ]]; then
-		temp_head
-        test_list "${TW[@]}"
-    fi
-    if [[ ${selection} == 7 ]]; then
-		temp_head
-        test_list "${HK[@]}"
-    fi
-    if [[ ${selection} == 6 ]]; then
-		temp_head
-        test_list "${CN_Unicom[@]}"
-        test_list "${CN_Telecom[@]}"
-        test_list "${CN_Mobile[@]}"
-    fi
-    if [[ ${selection} == 5 ]]; then
-		temp_head
-        test_list "${CN_Unicom[@]}"
-    fi
-    if [[ ${selection} == 4 ]]; then
-		temp_head
-        test_list "${CN_Telecom[@]}"
-    fi
-    if [[ ${selection} == 3 ]]; then
-		temp_head
-        test_list "${CN_Mobile[@]}"
-    fi
-    [[ ${selection} == 2 ]] && exit 1
-    if [[ ${selection} == 1 ]]; then
-		temp_head
-        
-    fi
-
+    case ${selection} in
+        8)
+            _yellow "checking speedtest server ID"
+            slist=($(get_data "${SERVER_BASE_URL}/TW.csv"))
+            temp_head
+            test_list "${slist[@]}"
+            ;;
+        7)
+            _yellow "checking speedtest server ID"
+            slist=($(get_data "${SERVER_BASE_URL}/HK.csv"))
+            temp_head
+            test_list "${slist[@]}"
+            ;;
+        6)
+            _yellow "checking speedtest server ID"
+            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            temp_head
+            test_list "${CN_Unicom[@]}"
+            test_list "${CN_Telecom[@]}"
+            test_list "${CN_Mobile[@]}"
+            ;;
+        5)
+            _yellow "checking speedtest server ID"
+            slist=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            temp_head
+            test_list "${slist[@]}"
+            ;;
+        4)
+            _yellow "checking speedtest server ID"
+            slist=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            temp_head
+            test_list "${slist[@]}"
+            ;;
+        3)
+            _yellow "checking speedtest server ID"
+            slist=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            temp_head
+            test_list "${slist[@]}"
+            ;;
+        1)
+            checkping
+            _yellow "checking speedtest server ID and find nearest server"
+            CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            temp_head
+            # echo "${CN_Unicom[@]}"
+            # echo "${CN_Telecom[@]}"
+            # echo "${CN_Mobile[@]}"
+            test_list "${CN_Unicom[@]}"
+            test_list "${CN_Telecom[@]}"
+            test_list "${CN_Mobile[@]}"
+            ;;
+        *)
+            echo "Invalid selection"
+            exit 1
+            ;;
+    esac
 }
+
 
 main() {
     preinfo
@@ -524,6 +618,5 @@ SystemInfo_GetSystemBit
 Check_JSONQuery
 install_speedtest
 check_cdn
-checkserverid
-csv_date=$(curl -s https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
 main
