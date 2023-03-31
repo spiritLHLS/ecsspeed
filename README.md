@@ -1,17 +1,33 @@
 # ecsspeed
 
-### 说明
+## 说明
+
+### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速ID的测速脚本
+
+```
+bash <(wget -qO- bash.spiritlhl.net/ecs-net)
+```
+
+或
+
+```
+bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh)
+```
+
+## 功能
+
+- [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
+- [x] 自动抓取 [speedtest.net](https://www.speedtest.net/) 节点信息结合已有信息去重并更新列表数据
+- [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速ID的测速脚本
+- [ ] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速ID的测速脚本
+
+## .cn数据
 
 北京时间每日7点半更新，感谢测速站点提供的服务
 
 这里只展示CN地区的节点信息
 
 闭源收录服务器数量(实时)：2392
-
-### 功能
-
-- [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
-- [ ] 制作对应的测速脚本
 
 ### 分类数据
 
@@ -30,6 +46,10 @@
 台湾数据 - [TW.csv](TW.csv)
 
 中国数据 - [CN.csv](CN.csv)
+
+## .net数据
+
+仓库：https://github.com/spiritLHLS/speedtest.net-CN-ID
 
 ### 交流
 
