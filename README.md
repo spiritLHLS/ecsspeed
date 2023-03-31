@@ -14,6 +14,8 @@ bash <(wget -qO- bash.spiritlhl.net/ecs-net)
 bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh)
 ```
 
+涵盖中国三大运营商、香港、台湾的测速节点，默认三网测速每个运营商选择本机ping值最低的两个节点测速，节点大概每7天自动更新一次。
+
 ## 功能
 
 - [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
