@@ -407,7 +407,7 @@ checkserverid(){
 
 preinfo() {
 	echo "———————————————————————————————— ecsspeed-net ————————————————————————————————"
-	echo "       bash <(curl -Lso- https://is.gd/ecsspeednet)"
+	echo "       bash <(wget -qO- https://is.gd/ecsspeednet)"
 	echo "       仓库：https://github.com/spiritLHLS/ecsspeed"
 	echo "       节点更新: $csv_date  | 脚本更新: $ecsspeednetver"
 	echo "——————————————————————————————————————————————————————————————————————————————"
