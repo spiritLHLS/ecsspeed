@@ -463,7 +463,7 @@ get_data() {
 
 ping_test() {
     local ip="$1"
-    local result="$(ping -c1 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
+    local result="$(ping -c1 -t6 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
     echo "$ip,$result"
 }
 
@@ -517,8 +517,13 @@ get_nearest_data() {
         data[$i]="${data[$i]},$ping_result"
     done
     
-    # 按ping值排序并取前两个id
-    sorted_data=($(echo "${data[@]}" | tr ' ' '\n' | sort -t',' -k4 -n | head -n 2))
+    # 检查data数组中是否有足够的元素可供排序并提取前两个元素
+    if [[ ${#data[@]} -lt 2 ]]; then
+        sorted_data=("${data[@]}")
+    else
+        # 排序并提取前两个元素
+        sorted_data=($(echo "${data[@]}" | tr ' ' '\n' | sort -t',' -k4 -n | head -n 2))
+    fi
     
     # 去除IP信息
     for (( i=0; i<${#sorted_data[@]}; i++ )); do
