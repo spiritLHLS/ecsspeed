@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # by spiritlhl
-# from https://github.com/spiritLHLS/ecs
+# from https://github.com/spiritLHLS/ecsspeed
 
+
+ecsspeednetver="2023/03/31"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
 PLAIN="\033[0m"
-
 _red() { echo -e "\033[31m\033[01m$@\033[0m"; }
 _green() { echo -e "\033[32m\033[01m$@\033[0m"; }
 _yellow() { echo -e "\033[33m\033[01m$@\033[0m"; }
@@ -408,7 +409,7 @@ preinfo() {
 	echo "———————————————————————————————— ecsspeed-net ————————————————————————————————"
 	echo "       bash <(curl -Lso- https://is.gd/ecsspeednet)"
 	echo "       仓库：https://github.com/spiritLHLS/ecsspeed"
-	echo "       节点更新: $csv_date  | 脚本更新: 2023/03/31"
+	echo "       节点更新: $csv_date  | 脚本更新: $ecsspeednetver"
 	echo "——————————————————————————————————————————————————————————————————————————————"
 }
 
