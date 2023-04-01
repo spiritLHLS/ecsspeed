@@ -369,7 +369,7 @@ download_speedtest_file() {
         sys_bit="arm64"
     fi
     local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_${sys_bit}.tar.gz"
-    if [[ -n "${CN}" ]]; then
+    if [[ -z "${CN}" || "${CN}" != true ]]; then
         curl --fail -s -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}" || curl --fail -s -m 10 -o speedtest.tar.gz "${url3}"
     else
         curl --fail -s -m 60 -o speedtest.tar.gz "${cdn_success_url}${url3}"
