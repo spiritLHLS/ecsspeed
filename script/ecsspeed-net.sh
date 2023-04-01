@@ -324,37 +324,91 @@ Check_JSONQuery() {
 }
 
 download_speedtest_file() {
+    file="/root/speedtest-cli/speedtest"
+    if [[ -e "$file" && "$($file -h >/dev/null 2>&1)" ]]; then
+        _green "speedtest found"
+        return
+    fi
+    file="/root/speedtest-cli/speedtest-go"
+    if [[ -e "$file" && "$($file -h >/dev/null 2>&1)" ]]; then
+        _green "speedtest-go found"
+        return
+    fi
     local sys_bit="$1"
     local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
     local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
     curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
+    if [[ $? -ne 0 ]]; then
+        _red "Error: Failed to download official speedtest-cli."
+        _yellow "Try using the unofficial speedtest-go"
+    fi
+    if [ "$sys_bit" = "aarch64" ]; then
+        sys_bit="arm64"
+    fi
+    local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_${sys_bit}.tar.gz"
+    curl --fail -s -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}" || curl --fail -s -m 10 -o speedtest.tar.gz "${url3}" 
+    if [ $? -eq 0 ]; then
+        _green "Used unofficial speedtest-go"
+    fi
+    if [ ! -d "/root/speedtest-cli" ]; then
+        mkdir -p "/root/speedtest-cli"
+    fi
+    if [ -f "./speedtest.tgz" ]; then
+        tar -zxf speedtest.tgz -C ./speedtest-cli 2> /dev/null
+        rm -f speedtest.tgz
+    elif [ -f "./speedtest.tar.gz" ]; then
+        tar -zxf speedtest.tar.gz -C ./speedtest-cli 2> /dev/null
+        rm -f speedtest.tar.gz
+    else
+        _red "Error: Failed to download speedtest tool."
+        exit 1
+    fi
 }
 
 install_speedtest() {
     _yellow "checking speedtest"
-    if [ ! -e "./speedtest-cli/speedtest" ]; then
-        sys_bit=""
-        local sysarch="$(uname -p)"
-        case "${sysarch}" in
-            "x86_64"|"x86") sys_bit="x86_64";;
-            "i386"|"i686") sys_bit="i386";;
-            "aarch64"|"armv7l"|"armv8"|"armv8l") sys_bit="aarch64";;
-            *) sys_bit="x86_64";;
-        esac
-        if ! download_speedtest_file "${sys_bit}"; then
-            _red "Error: Failed to download speedtest-cli.\n"
-            return 1
-        fi
-        mkdir speedtest-cli
-        tar -zxf speedtest.tgz -C ./speedtest-cli
-        rm -f speedtest.tgz
-    fi
+    sys_bit=""
+    local sysarch="$(uname -m)"
+    case "${sysarch}" in
+        "x86_64"|"x86"|"amd64"|"x64") sys_bit="x86_64";;
+        "i386"|"i686") sys_bit="i386";;
+        "aarch64"|"armv7l"|"armv8"|"armv8l") sys_bit="aarch64";;
+        "s390x") sys_bit="s390x";;
+        "riscv64") sys_bit="riscv64";;
+        "ppc64le") sys_bit="ppc64le";;
+        "ppc64") sys_bit="ppc64";;
+        *) sys_bit="x86_64";;
+    esac
+    download_speedtest_file "${sys_bit}"
 }
 
 speed_test() {
     local nodeName="$2"
-    [ -z "$1" ] && ./speedtest-cli/speedtest --progress=no --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1 || \
-    ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
+    if [ ! -f "./speedtest-cli/speedtest" ]; then
+        if [ -z "$1" ]; then
+            ./speedtest-cli/speedtest-go > ./speedtest-cli/speedtest.log 2>&1
+        else
+            ./speedtest-cli/speedtest-go --server=$1 > ./speedtest-cli/speedtest.log 2>&1
+        fi
+    else
+        if [ -z "$1" ]; then
+            ./speedtest-cli/speedtest --progress=no --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
+        else
+            ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
+        fi
+    fi
+    if [ $? -ne 0 ]; then
+        _red "Error: Segmentation fault"
+        _yellow "Please manually install speedtest-go into /root/speedtest-cli"
+        rm -rf /root/speedtest-cli/speedtest*
+        _yellow "Please check https://github.com/showwin/speedtest-go"
+        exit 1
+    fi
+    if [[ -e "/root/speedtest-cli/speedtest.log" ]] && grep -q "Segmentation fault" "/root/speedtest-cli/speedtest.log"; then
+        _red "Error: Segmentation fault"
+        _yellow "Please manually install speedtest or speedtest-go into /root/speedtest-cli"
+        exit 1
+    fi
     if [ $? -eq 0 ]; then
         local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
         local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
@@ -628,7 +682,6 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    rm -rf speedtest*
 }
 
 checkroot
@@ -640,8 +693,8 @@ checktar
 SystemInfo_GetOSRelease
 SystemInfo_GetSystemBit
 Check_JSONQuery
-install_speedtest
 check_cdn
+install_speedtest
 csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
 main
 print_end_time
