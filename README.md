@@ -2,7 +2,7 @@
 
 ## 说明
 
-### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速ID的测速脚本
+### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
 ```
 bash <(wget -qO- bash.spiritlhl.net/ecs-net)
