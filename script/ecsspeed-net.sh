@@ -427,9 +427,8 @@ speed_test() {
             local dl_speed=$(grep -oP 'Download: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local up_speed=$(grep -oP 'Upload: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local latency=$(grep -oP 'Latency: \K[\d\.]+' ./speedtest-cli/speedtest.log)
-            local packet_loss=$(grep -oP 'Loss: \K[\d\.]+' ./speedtest-cli/speedtest.log | awk '{print ($0=="NaN" ? "NULL" : $0)}')
             if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-                echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t  ${packet_loss}"
+                echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
             fi
         fi
     else
@@ -730,7 +729,7 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    # rm -rf /root/speedtest-cli/speedtest*
+    rm -rf /root/speedtest-cli/speedtest*
 }
 
 checkroot
