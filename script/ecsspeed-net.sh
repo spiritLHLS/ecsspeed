@@ -357,34 +357,40 @@ download_speedtest_file() {
         return
     fi
     local sys_bit="$1"
-    local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-    local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-    curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
-    if [[ $? -ne 0 ]]; then
-        _red "Error: Failed to download official speedtest-cli."
-        rm -rf speedtest.tgz*
-        _yellow "Try using the unofficial speedtest-go"
-    fi
-    if [ "$sys_bit" = "aarch64" ]; then
-        sys_bit="arm64"
-    fi
-    local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_${sys_bit}.tar.gz"
     if [[ -z "${CN}" || "${CN}" != true ]]; then
+        local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
+        if [[ $? -ne 0 ]]; then
+            _red "Error: Failed to download official speedtest-cli."
+            rm -rf speedtest.tgz*
+            _yellow "Try using the unofficial speedtest-go"
+        fi
+        if [ "$sys_bit" = "aarch64" ]; then
+            sys_bit="arm64"
+        fi
+        local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_Linux_${sys_bit}.tar.gz"
         curl --fail -s -m 10 -o speedtest.tar.gz "${url3}" || curl --fail -s -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}"
     else
+        if [ "$sys_bit" = "aarch64" ]; then
+            sys_bit="arm64"
+        fi
+        local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_Linux_${sys_bit}.tar.gz"
         curl -o speedtest.tar.gz "${cdn_success_url}${url3}"
-    fi
-    if [ $? -eq 0 ]; then
-        _green "Used unofficial speedtest-go"
+        if [ $? -eq 0 ]; then
+            _green "Used unofficial speedtest-go"
+        fi
     fi
     if [ ! -d "/root/speedtest-cli" ]; then
         mkdir -p "/root/speedtest-cli"
     fi
     if [ -f "./speedtest.tgz" ]; then
-        tar -zxf speedtest.tgz -C ./speedtest-cli 2> /dev/null
+        tar -zxf speedtest.tgz -C ./speedtest-cli
+        chmod 777 ./speedtest-cli/speedtest
         rm -f speedtest.tgz
     elif [ -f "./speedtest.tar.gz" ]; then
-        tar -zxf speedtest.tar.gz -C ./speedtest-cli 2> /dev/null
+        tar -zxf speedtest.tar.gz -C ./speedtest-cli
+        chmod 777 ./speedtest-cli/speedtest-go
         rm -f speedtest.tar.gz
     else
         _red "Error: Failed to download speedtest tool."
@@ -417,23 +423,31 @@ speed_test() {
         else
             ./speedtest-cli/speedtest-go --server=$1 > ./speedtest-cli/speedtest.log 2>&1
         fi
+        if [ $? -eq 0 ]; then
+            local dl_speed=$(grep -oP 'Download: \K[\d\.]+' ./speedtest-cli/speedtest.log)
+            local up_speed=$(grep -oP 'Upload: \K[\d\.]+' ./speedtest-cli/speedtest.log)
+            local latency=$(grep -oP 'Latency: \K[\d\.]+' ./speedtest-cli/speedtest.log)
+            local packet_loss=$(grep -oP 'Loss: \K[\d\.]+' ./speedtest-cli/speedtest.log | awk '{print ($0=="NaN" ? "NULL" : $0)}')
+            if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
+                echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t  ${packet_loss}"
+            fi
+        fi
     else
         if [ -z "$1" ]; then
             ./speedtest-cli/speedtest --progress=no --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
         else
             ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
         fi
-    fi
-    if [ $? -eq 0 ]; then
-        local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
-        local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
-        local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
-        local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
-        if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-            echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+        if [ $? -eq 0 ]; then
+            local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
+            local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
+            local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
+            if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
+                echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+            fi
         fi
     fi
-    wait
 }
 
 test_list() {
@@ -491,6 +505,15 @@ check_cdn() {
         sleep 0.5
     done
     export cdn_success_url=""
+}
+
+check_cdn_file() {
+    check_cdn "https://raw.githubusercontent.com/spiritLHLS/ecs/main/back/test"
+    if [ -n "$cdn_success_url" ]; then
+        _yellow "CDN available, using CDN"
+    else
+        _yellow "No CDN available, no use CDN"
+    fi
 }
 
 get_data() {
@@ -707,7 +730,7 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    rm -rf /root/speedtest-cli/speedtest*
+    # rm -rf /root/speedtest-cli/speedtest*
 }
 
 checkroot
@@ -719,7 +742,7 @@ checktar
 SystemInfo_GetOSRelease
 SystemInfo_GetSystemBit
 Check_JSONQuery
-check_cdn
+check_cdn_file
 check_china
 install_speedtest
 csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
