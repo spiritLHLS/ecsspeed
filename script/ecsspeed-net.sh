@@ -736,7 +736,9 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    rm -rf /root/speedtest-cli/speedtest*
+    rm -rf /root/speedtest-cli/speedtest* 
+    rm -rf /root/speedtest-cli/LICENSE* 
+    rm -rf /root/speedtest-cli/README.md*
 }
 
 checkroot
