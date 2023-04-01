@@ -14,15 +14,13 @@ bash <(wget -qO- bash.spiritlhl.net/ecs-net)
 bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh)
 ```
 
+支持测速的架构：i386, x86_64, amd64, arm64, s390x, riscv64, ppc64le, ppc64
+
 涵盖中国三大运营商、香港、台湾的测速节点，默认三网测速每个运营商选择本机ping值最低的两个节点测速，节点列表大概每7天自动更新一次。
 
-支持测速的架构：i386, x86_64, arm
+支持国内服务器测试，但由于国内服务器带宽过小，所以可能需要手动下载 [speedtest-go](https://github.com/showwin/speedtest-go) 到对应目录，详见初次运行的提示
 
-待处理问题：
-
-支持国内服务器测试 - 近期添加官方CLI安装失败时使用第三方 [speedtest-go](https://github.com/showwin/speedtest-go) 测速
-
-增加cli工具安装失败的处理 - 近期添加补救措施
+当官方CLI安装失败(如罕见的架构或者官方网站访问失败时)使用 [speedtest-go](https://github.com/showwin/speedtest-go) 作为替代品测速
 
 ## 功能
 
