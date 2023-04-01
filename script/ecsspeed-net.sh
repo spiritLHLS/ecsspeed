@@ -424,11 +424,6 @@ speed_test() {
             ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
         fi
     fi
-    if [[ -e "/root/speedtest-cli/speedtest.log" ]] && grep -q "Segmentation fault" "/root/speedtest-cli/speedtest.log"; then
-        _red "Error: Segmentation fault"
-        _yellow "Please manually install speedtest or speedtest-go into /root/speedtest-cli"
-        exit 1
-    fi
     if [ $? -eq 0 ]; then
         local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
         local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
