@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/03/31"
+ecsspeednetver="2023/04/01"
 spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
@@ -585,7 +585,7 @@ runtest() {
             ;;
         5)
             _yellow "checking speedtest server ID"
-            slist=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            slist=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             temp_head
             test_list "${slist[@]}"
             ;;
@@ -597,7 +597,7 @@ runtest() {
             ;;
         3)
             _yellow "checking speedtest server ID"
-            slist=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            slist=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             temp_head
             test_list "${slist[@]}"
             ;;
