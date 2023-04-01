@@ -723,6 +723,13 @@ runtest() {
     esac
 }
 
+checkver(){
+    csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+    if [ $? -ne 0 ]; then
+        csv_date=$(curl -s --max-time 6 ${cdn_success_url}https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+    fi
+    export csv_date
+}
 
 main() {
     preinfo
@@ -744,6 +751,6 @@ Check_JSONQuery
 check_cdn_file
 check_china
 install_speedtest
-csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+checkver
 main
 print_end_time
