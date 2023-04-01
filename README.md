@@ -14,6 +14,12 @@ bash <(wget -qO- bash.spiritlhl.net/ecs-net)
 bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh)
 ```
 
+或国内用
+
+```
+bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh)
+```
+
 支持测速的架构：i386, x86_64, amd64, arm64, s390x, riscv64, ppc64le, ppc64
 
 涵盖中国三大运营商、香港、台湾的测速节点，默认的三网测速每个运营商选择本机ping值最低的两个节点测速，详情三网测速才是全测，节点列表大概每7天自动更新一次。
