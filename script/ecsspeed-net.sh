@@ -107,6 +107,28 @@ checkping() {
 	fi
 }
 
+check_china(){
+    if [[ -z "${CN}" ]]; then
+        if [[ $(curl -m 10 -s https://ipapi.co/json | grep 'China') != "" ]]; then
+            _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
+            read -e -r -p "是否选用中国镜像完成测速工具安装? [Y/n] " input
+            case $input in
+                [yY][eE][sS] | [yY])
+                    echo "使用中国镜像"
+                    CN=true
+                ;;
+                [nN][oO] | [nN])
+                    echo "不使用中国镜像"
+                ;;
+                *)
+                    echo "使用中国镜像"
+                    CN=true
+                ;;
+            esac
+        fi
+    fi
+}
+
 SystemInfo_GetOSRelease() {
     _yellow "checking OS"
     if [ -f "/etc/centos-release" ]; then # CentOS
@@ -340,13 +362,18 @@ download_speedtest_file() {
     curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
     if [[ $? -ne 0 ]]; then
         _red "Error: Failed to download official speedtest-cli."
+        rm -rf speedtest.tgz*
         _yellow "Try using the unofficial speedtest-go"
     fi
     if [ "$sys_bit" = "aarch64" ]; then
         sys_bit="arm64"
     fi
     local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_${sys_bit}.tar.gz"
-    curl --fail -s -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}" || curl --fail -s -m 10 -o speedtest.tar.gz "${url3}" 
+    if [[ -n "${CN}" ]]; then
+        curl --fail -s -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}" || curl --fail -s -m 10 -o speedtest.tar.gz "${url3}"
+    else
+        curl --fail -s -m 60 -o speedtest.tar.gz "${cdn_success_url}${url3}"
+    fi
     if [ $? -eq 0 ]; then
         _green "Used unofficial speedtest-go"
     fi
@@ -396,13 +423,6 @@ speed_test() {
         else
             ./speedtest-cli/speedtest --progress=no --server-id=$1 --accept-license --accept-gdpr > ./speedtest-cli/speedtest.log 2>&1
         fi
-    fi
-    if [ $? -ne 0 ]; then
-        _red "Error: Segmentation fault"
-        _yellow "Please manually install speedtest-go into /root/speedtest-cli"
-        rm -rf /root/speedtest-cli/speedtest*
-        _yellow "Please check https://github.com/showwin/speedtest-go"
-        exit 1
     fi
     if [[ -e "/root/speedtest-cli/speedtest.log" ]] && grep -q "Segmentation fault" "/root/speedtest-cli/speedtest.log"; then
         _red "Error: Segmentation fault"
@@ -695,6 +715,7 @@ SystemInfo_GetOSRelease
 SystemInfo_GetSystemBit
 Check_JSONQuery
 check_cdn
+check_china
 install_speedtest
 csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
 main
