@@ -325,12 +325,12 @@ Check_JSONQuery() {
 
 download_speedtest_file() {
     file="/root/speedtest-cli/speedtest"
-    if [[ -e "$file" && "$($file -h >/dev/null 2>&1)" ]]; then
+    if [[ -e "$file" ]]; then
         _green "speedtest found"
         return
     fi
     file="/root/speedtest-cli/speedtest-go"
-    if [[ -e "$file" && "$($file -h >/dev/null 2>&1)" ]]; then
+    if [[ -e "$file" ]]; then
         _green "speedtest-go found"
         return
     fi
@@ -682,6 +682,7 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
+    rm -rf /root/speedtest-cli/speedtest*
 }
 
 checkroot
