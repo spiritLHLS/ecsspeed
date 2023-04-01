@@ -16,6 +16,14 @@ bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/r
 
 涵盖中国三大运营商、香港、台湾的测速节点，默认三网测速每个运营商选择本机ping值最低的两个节点测速，节点列表大概每7天自动更新一次。
 
+支持测速的架构：i386, x86_64, arm
+
+待处理问题：
+
+支持国内服务器测试 - 近期添加官方CLI安装失败时使用第三方 [speedtest-go](https://github.com/showwin/speedtest-go) 测速
+
+增加cli工具安装失败的处理 - 近期添加补救措施
+
 ## 功能
 
 - [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
