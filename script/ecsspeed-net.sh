@@ -497,19 +497,24 @@ get_data() {
     local url="$1"
     local data=()
     local response
-    local retries=0
-    while [[ $retries -lt 3 ]]; do
-        response=$(curl -s --max-time 3 "$url")
-        if [[ $? -eq 0 ]]; then
-            break
-        else
-            retries=$((retries+1))
-            sleep 1
+    if [[ -z "${CN}" || "${CN}" != true ]]; then
+        local retries=0
+        while [[ $retries -lt 3 ]]; do
+            response=$(curl -s --max-time 3 "$url")
+            if [[ $? -eq 0 ]]; then
+                break
+            else
+                retries=$((retries+1))
+                sleep 1
+            fi
+        done
+        if [[ $retries -eq 3 ]]; then
+            url="${cdn_success_url}${url}"
+            response=$(curl -s --max-time 6 "$url")
         fi
-    done
-    if [[ $retries -eq 3 ]]; then
+    else
         url="${cdn_success_url}${url}"
-        response=$(curl -s --max-time 6 "$url")
+        response=$(curl -s --max-time 10 "$url")
     fi
     while read line; do
         if [[ -n "$line" ]]; then
@@ -541,19 +546,24 @@ get_nearest_data() {
     local url="$1"
     local data=()
     local response
-    local retries=0
-    while [[ $retries -lt 2 ]]; do
-        response=$(curl -s --max-time 6 "$url")
-        if [[ $? -eq 0 ]]; then
-            break
-        else
-            retries=$((retries+1))
-            sleep 1
+    if [[ -z "${CN}" || "${CN}" != true ]]; then
+        local retries=0
+        while [[ $retries -lt 2 ]]; do
+            response=$(curl -s --max-time 2 "$url")
+            if [[ $? -eq 0 ]]; then
+                break
+            else
+                retries=$((retries+1))
+                sleep 1
+            fi
+        done
+        if [[ $retries -eq 2 ]]; then
+            url="${cdn_success_url}${url}"
+            response=$(curl -s --max-time 6 "$url")
         fi
-    done
-    if [[ $retries -eq 2 ]]; then
+    else
         url="${cdn_success_url}${url}"
-        response=$(curl -s --max-time 6 "$url")
+        response=$(curl -s --max-time 10 "$url")
     fi
     while read line; do
         if [[ -n "$line" ]]; then
