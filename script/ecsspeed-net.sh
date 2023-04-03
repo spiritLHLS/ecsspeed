@@ -665,7 +665,7 @@ selecttest() {
 	echo -e "\t${GREEN}7.${PLAIN}台湾"
 	echo -e "\t${GREEN}8.${PLAIN}退出测速"
 	while :; do echo
-			read -p "  请输入数字选择测速类型: " selection
+			read -p "请输入数字选择测速类型: " selection
 			if [[ ! $selection =~ ^[1-8]$ ]]; then
 					echo -ne "  ${RED}输入错误${PLAIN}, 请输入正确的数字!"
 			else
