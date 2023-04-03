@@ -706,22 +706,22 @@ runtest() {
             temp_head
             test_list "${slist[@]}"
             ;;
-        2)
-            checkping
-            _yellow "checking speedtest server ID and find nearest server"
-            CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
-            CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
-            CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+	2)
+            _yellow "checking speedtest server ID"
+            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
             test_list "${CN_Mobile[@]}"
             ;;
 	1)
-            _yellow "checking speedtest server ID"
-            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
-            CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
-            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            checkping
+            _yellow "checking speedtest server ID and find nearest server"
+            CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
