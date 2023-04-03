@@ -38,6 +38,15 @@ checkroot(){
 	[[ $EUID -ne 0 ]] && echo -e "${RED}请使用 root 用户运行本脚本！${PLAIN}" && exit 1
 }
 
+global_exit(){
+    rm -rf /root/speedtest.tgz*
+    rm -rf /root/speedtest.tar.gz*
+    rm -rf /root/speedtest-cli*
+    rm -rf /root/speedtest-cli/speedtest* 
+    rm -rf /root/speedtest-cli/LICENSE* 
+    rm -rf /root/speedtest-cli/README.md*
+}
+
 checksystem() {
 	if [ -f /etc/redhat-release ]; then
 	    release="centos"
@@ -646,10 +655,15 @@ preinfo() {
 }
 
 selecttest() {
-	echo -e "  测速类型:    ${GREEN}1.${PLAIN} 三网测速    ${GREEN}2.${PLAIN} 取消测速"
-	echo -e "               ${GREEN}3.${PLAIN} 联通节点    ${GREEN}4.${PLAIN} 电信节点    ${GREEN}5.${PLAIN} 移动节点"
-    echo -e "               ${GREEN}6.${PLAIN} 详细三网测速 "
-	echo -ne "               ${GREEN}7.${PLAIN} 香港节点    ${GREEN}8.${PLAIN} 台湾节点"
+	echo -e "测速类型:"
+	echo -e "\t${GREEN}1.${PLAIN}\t三网测速"
+	echo -e "\t${GREEN}2.${PLAIN}\t三网测速(详细)"
+	echo -e "\t${GREEN}3.${PLAIN}\t联通"
+	echo -e "\t${GREEN}4.${PLAIN}\t电信"
+	echo -e "\t${GREEN}5.${PLAIN}\t移动"
+	echo -e "\t${GREEN}6.${PLAIN}\t香港"
+	echo -e "\t${GREEN}7.${PLAIN}\t台湾"
+	echo -e "\t${GREEN}8.${PLAIN}\t退出测速"
 	while :; do echo
 			read -p "  请输入数字选择测速类型: " selection
 			if [[ ! $selection =~ ^[1-8]$ ]]; then
@@ -662,27 +676,17 @@ selecttest() {
 
 runtest() {
     case ${selection} in
-        8)
+        7)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/TW.csv"))
             temp_head
             test_list "${slist[@]}"
             ;;
-        7)
+        6)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/HK.csv"))
             temp_head
             test_list "${slist[@]}"
-            ;;
-        6)
-            _yellow "checking speedtest server ID"
-            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
-            CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
-            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
-            temp_head
-            test_list "${CN_Unicom[@]}"
-            test_list "${CN_Telecom[@]}"
-            test_list "${CN_Mobile[@]}"
             ;;
         5)
             _yellow "checking speedtest server ID"
@@ -702,22 +706,30 @@ runtest() {
             temp_head
             test_list "${slist[@]}"
             ;;
-        1)
+        2)
             checkping
             _yellow "checking speedtest server ID and find nearest server"
             CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             temp_head
-            # echo "${CN_Unicom[@]}"
-            # echo "${CN_Telecom[@]}"
-            # echo "${CN_Mobile[@]}"
+            test_list "${CN_Unicom[@]}"
+            test_list "${CN_Telecom[@]}"
+            test_list "${CN_Mobile[@]}"
+            ;;
+	1)
+            _yellow "checking speedtest server ID"
+            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
+            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
             test_list "${CN_Mobile[@]}"
             ;;
         *)
-            echo "Invalid selection"
+            echo "Exit"
+	    global_exit
             exit 1
             ;;
     esac
@@ -736,9 +748,6 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    rm -rf /root/speedtest-cli/speedtest* 
-    rm -rf /root/speedtest-cli/LICENSE* 
-    rm -rf /root/speedtest-cli/README.md*
 }
 
 checkroot
@@ -756,3 +765,4 @@ install_speedtest
 checkver
 main
 print_end_time
+global_exit
