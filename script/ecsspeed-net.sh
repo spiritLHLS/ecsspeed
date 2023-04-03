@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/03"
+ecsspeednetver="2023/04/04"
 spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
@@ -437,7 +437,15 @@ speed_test() {
             local up_speed=$(grep -oP 'Upload: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local latency=$(grep -oP 'Latency: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-                echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+                if [[ $selection =~ ^[1-5]$ ]]; then
+                    echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+                else
+                    if [ ${#nodeName} -ge 8 ]; then
+                        echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+                    else
+                        echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+                    fi
+                fi
             fi
         fi
     else
@@ -452,7 +460,15 @@ speed_test() {
             local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
             local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
-                echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+                if [[ $selection =~ ^[1-5]$ ]]; then
+                    echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+                else
+                    if [ ${#nodeName} -ge 8 ]; then
+                        echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+                    else
+                        echo -e "${nodeName}\t\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
+                    fi
+                fi
             fi
         fi
     fi
@@ -475,11 +491,21 @@ test_list() {
 
 temp_head(){
     if [[ $selection =~ ^[1-5]$ ]]; then
-        echo "——————————————————————————————————————————————————————————————————————————————"
-	    echo -e "位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
+        if [ -f "/root/speedtest-cli/speedtest" ]; then
+            echo "——————————————————————————————————————————————————————————————————————————————"
+	        echo -e "位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
+        else
+            echo "——————————————————————————————————————————————————————————————————————————————"
+	        echo -e "位置\t         上传速度\t 下载速度\t 延迟"
+        fi
     else
-        echo "——————————————————————————————————————————————————————————————————————————————"
-	    echo -e "位置\t 上传速度\t下载速度\t 延迟\t 丢包率"
+        if [ -f "/root/speedtest-cli/speedtest" ]; then
+            echo "——————————————————————————————————————————————————————————————————————————————"
+	        echo -e "位置\t\t 上传速度\t 下载速度\t 延迟\t  丢包率"
+        else
+            echo "——————————————————————————————————————————————————————————————————————————————"
+	        echo -e "位置\t\t 上传速度\t 下载速度\t 延迟"
+        fi
     fi
 }
 
