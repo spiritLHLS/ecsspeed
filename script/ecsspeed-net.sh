@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/01"
+ecsspeednetver="2023/04/03"
 spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
@@ -656,14 +656,14 @@ preinfo() {
 
 selecttest() {
 	echo -e "测速类型:"
-	echo -e "\t${GREEN}1.${PLAIN}\t三网测速"
-	echo -e "\t${GREEN}2.${PLAIN}\t三网测速(详细)"
-	echo -e "\t${GREEN}3.${PLAIN}\t联通"
-	echo -e "\t${GREEN}4.${PLAIN}\t电信"
-	echo -e "\t${GREEN}5.${PLAIN}\t移动"
-	echo -e "\t${GREEN}6.${PLAIN}\t香港"
-	echo -e "\t${GREEN}7.${PLAIN}\t台湾"
-	echo -e "\t${GREEN}8.${PLAIN}\t退出测速"
+	echo -e "\t${GREEN}1.${PLAIN}三网测速"
+	echo -e "\t${GREEN}2.${PLAIN}三网测速(详细)"
+	echo -e "\t${GREEN}3.${PLAIN}联通"
+	echo -e "\t${GREEN}4.${PLAIN}电信"
+	echo -e "\t${GREEN}5.${PLAIN}移动"
+	echo -e "\t${GREEN}6.${PLAIN}香港"
+	echo -e "\t${GREEN}7.${PLAIN}台湾"
+	echo -e "\t${GREEN}8.${PLAIN}退出测速"
 	while :; do echo
 			read -p "  请输入数字选择测速类型: " selection
 			if [[ ! $selection =~ ^[1-8]$ ]]; then
