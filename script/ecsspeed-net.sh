@@ -682,8 +682,8 @@ preinfo() {
 
 selecttest() {
 	echo -e "测速类型:"
-	echo -e "\t${GREEN}1.${PLAIN}三网测速\t\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}8.${PLAIN}退出测速"
-	echo -e "\t${GREEN}2.${PLAIN}三网测速(详细)\t${GREEN}4.${PLAIN}电信\t\t${GREEN}7.${PLAIN}台湾"
+	echo -e "\t${GREEN}1.${PLAIN}三网测速(6个节点)\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}8.${PLAIN}退出测速"
+	echo -e "\t${GREEN}2.${PLAIN}三网测速(所有节点)\t${GREEN}4.${PLAIN}电信\t\t${GREEN}7.${PLAIN}台湾"
 	echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动"
     echo "——————————————————————————————————————————————————————————————————————————————"
 	while :; do echo
