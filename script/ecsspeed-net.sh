@@ -682,16 +682,11 @@ preinfo() {
 
 selecttest() {
 	echo -e "测速类型:"
-	echo -e "\t${GREEN}1.${PLAIN}三网测速"
-	echo -e "\t${GREEN}2.${PLAIN}三网测速(详细)"
-	echo -e "\t${GREEN}3.${PLAIN}联通"
-	echo -e "\t${GREEN}4.${PLAIN}电信"
-	echo -e "\t${GREEN}5.${PLAIN}移动"
-	echo -e "\t${GREEN}6.${PLAIN}香港"
-	echo -e "\t${GREEN}7.${PLAIN}台湾"
-	echo -e "\t${GREEN}8.${PLAIN}退出测速"
+	echo -e "\t${GREEN}1.${PLAIN}三网测速\t\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}8.${PLAIN}退出测速"
+	echo -e "\t${GREEN}2.${PLAIN}三网测速(详细)\t${GREEN}4.${PLAIN}电信\t\t${GREEN}7.${PLAIN}台湾"
+	echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动"
 	while :; do echo
-			read -p "请输入数字选择测速类型: " selection
+			reading "请输入数字选择测速类型: " selection
 			if [[ ! $selection =~ ^[1-8]$ ]]; then
 					echo -ne "  ${RED}输入错误${PLAIN}, 请输入正确的数字!"
 			else
