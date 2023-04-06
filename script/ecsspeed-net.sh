@@ -595,7 +595,7 @@ get_data() {
 
 ping_test() {
     local ip="$1"
-    local result="$(ping -c1 -t6 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
+    local result="$(ping -c1 -t3 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
     echo "$ip,$result"
 }
 
