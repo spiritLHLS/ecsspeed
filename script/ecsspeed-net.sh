@@ -4,7 +4,6 @@
 
 
 ecsspeednetver="2023/04/06"
-spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -675,8 +674,8 @@ get_nearest_data() {
 preinfo() {
 	echo "——————————————————————————————— ecsspeed-net —————————————————————————————————"
 	echo "             bash <(wget -qO- bash.spiritlhl.net/ecs-net)"
-	echo "             仓库：https://github.com/spiritLHLS/ecsspeed"
-	echo "    节点更新: $csv_date  | 脚本更新: $ecsspeednetver | speedtest版本: $spver"
+	echo "             Repo：https://github.com/spiritLHLS/ecsspeed "
+	echo "             节点更新: $csv_date  | 脚本更新: $ecsspeednetver "
 	echo "——————————————————————————————————————————————————————————————————————————————"
 }
 
