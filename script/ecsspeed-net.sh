@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/04"
+ecsspeednetver="2023/04/06"
 spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
