@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/06"
+ecsspeednetver="2023/04/07"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -439,7 +439,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                 else
-                    if [ ${#nodeName} -ge 8 ]; then
+                    if [ ${#nodeName} -gt 8 ]; then
                         echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                     else
                         echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
@@ -462,7 +462,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                 else
-                    if [ ${#nodeName} -ge 8 ]; then
+                    if [ ${#nodeName} -gt 8 ]; then
                         echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                     else
                         echo -e "${nodeName}\t\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
