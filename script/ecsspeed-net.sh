@@ -439,7 +439,8 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                 else
-                    if [ ${#nodeName} -ge 8 ]; then
+                    length=$(echo -n "$nodeName" | awk '{len=0; for(i=1;i<=length($0);i++){c=substr($0,i,1);if(c~/[^\x00-\x7F]/){len+=2}else{len++}}; print len}')
+                    if [ $length -ge 8 ]; then
 		    	echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                     else
 		    	echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
@@ -462,7 +463,8 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                 else
-                    if [ ${#nodeName} -ge 8 ]; then
+                    length=$(echo -n "$nodeName" | awk '{len=0; for(i=1;i<=length($0);i++){c=substr($0,i,1);if(c~/[^\x00-\x7F]/){len+=2}else{len++}}; print len}')
+                    if [ $length -ge 8 ]; then
                         echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                     else
 			echo -e "${nodeName}\t\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
