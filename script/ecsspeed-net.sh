@@ -439,7 +439,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                 else
-                    if [ $(( ${#nodeName} - 1 )) -gt 8 ]; then
+                    if [ ${#nodeName} -gt 8 ]; then
 		    	echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                     else
                         echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
@@ -462,7 +462,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                 else
-                    if [ $(( ${#nodeName} - 1 )) -gt 8 ]; then
+                    if [ ${#nodeName} -gt 8 ]; then
                         echo -e "${nodeName}\t\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                     else
 		    	echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
