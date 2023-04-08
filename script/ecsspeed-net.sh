@@ -423,6 +423,26 @@ install_speedtest() {
     download_speedtest_file "${sys_bit}"
 }
 
+get_string_length() {
+  local nodeName="$1"
+  local length
+  local converted
+  converted=$(echo -n "$nodeName" | iconv -f utf8 -t gb2312 2>/dev/null)
+  if [[ $? -eq 0 && -n "$converted" ]]; then
+    length=$(echo -n "$converted" | wc -c)
+    echo $length
+    return
+  fi
+  converted=$(echo -n "$nodeName" | iconv -f utf8 -t big5 2>/dev/null)
+  if [[ $? -eq 0 && -n "$converted" ]]; then
+    length=$(echo -n "$converted" | wc -c)
+    echo $length
+    return
+  fi
+  length=$(echo -n "$nodeName" | awk '{len=0; for(i=1;i<=length($0);i++){c=substr($0,i,1);if(c~/[^\x00-\x7F]/){len+=2}else{len++}}; print len}')
+  echo $length
+}
+
 speed_test() {
     local nodeName="$2"
     if [ ! -f "./speedtest-cli/speedtest" ]; then
@@ -439,7 +459,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                 else
-                    length=$(echo -n "$nodeName" | iconv -f utf8 -t gb2312 | wc -c)
+                    length=$(get_string_length "$nodeName")
                     if [ $length -ge 8 ]; then
 		    	echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                     else
@@ -463,7 +483,7 @@ speed_test() {
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                 else
-                    length=$(echo -n "$nodeName" | iconv -f utf8 -t gb2312 | wc -c)
+                    length=$(get_string_length "$nodeName")
                     if [ $length -ge 8 ]; then
                         echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                     else
