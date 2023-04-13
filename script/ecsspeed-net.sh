@@ -775,6 +775,7 @@ runtest() {
             CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+	    _blue "就近节点如果缺少某一个运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
