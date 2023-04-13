@@ -69,6 +69,10 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 admin@spiritlhl.net
 
+### 致谢
+
+感谢 [@fscarmen](https://github.com/fscarmen) 提供的并发测ping支持
+
 # 免责声明
 
 * 本仓库仅供学习
