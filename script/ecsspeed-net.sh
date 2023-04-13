@@ -3,9 +3,10 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/08"
+ecsspeednetver="2023/04/13"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
+rm -f /tmp/test
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
@@ -616,9 +617,10 @@ get_data() {
 
 ping_test() {
     local ip="$1"
-    local result="$(ping -c1 -t3 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
+    local result="$(ping -c1 -W3 "$ip" 2>/dev/null | awk -F '/' 'END {print $5}')"
     echo "$ip,$result"
 }
+
 
 get_nearest_data() {
     local url="$1"
@@ -664,30 +666,33 @@ get_nearest_data() {
     
     # 并行ping测试所有IP
     for (( i=0; i<${#data[@]}; i++ )); do
-        ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
-        results[$i]=$(ping_test "$ip" &)
+        { ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
+        ping_test "$ip" >> /tmp/test; }&
     done
-    wait # 等待所有并行ping测试完成
+    wait
     
-    # 将测试结果和data数组合并
-    for (( i=0; i<${#data[@]}; i++ )); do
-        ping_result=$(echo "${results[$i]}" | awk -F ',' '{print $2}')
-        data[$i]="${data[$i]},$ping_result"
+    # 取IP顺序列表results
+    output=$(cat /tmp/test)
+    IFS=$'\n' read -rd '' -a lines <<<"$output"
+    results=()
+    for line in "${lines[@]}"; do
+        field=$(echo "$line" | cut -d',' -f1)
+        results+=("$field")
     done
-    
-    # 检查data数组中是否有足够的元素可供排序并提取前两个元素
-    if [[ ${#data[@]} -lt 2 ]]; then
-        sorted_data=("${data[@]}")
-    else
-        # 排序并提取前两个元素
-        sorted_data=($(echo "${data[@]}" | tr ' ' '\n' | sort -t',' -k4 -n | head -n 2))
-    fi
-    
-    # 去除IP信息
-    for (( i=0; i<${#sorted_data[@]}; i++ )); do
-        sorted_data[$i]=$(echo "${sorted_data[$i]}" | awk -F ',' '{print $1","$2}')
+
+    # 比对data取IP对应的数组
+    sorted_data=()
+    for result in "${results[@]}"; do
+        for item in "${data[@]}"; do
+            if [[ "$item" == *"$result"* ]]; then
+                id=$(echo "$item" | cut -d',' -f1)
+                name=$(echo "$item" | cut -d',' -f2)
+                sorted_data+=("$id,$name")
+            fi
+        done
     done
-    
+    sorted_data=("${sorted_data[@]:0:2}")
+
     # 返回结果
     echo "${sorted_data[@]}"
 }
@@ -749,22 +754,22 @@ runtest() {
             temp_head
             test_list "${slist[@]}"
             ;;
-	2)
+	    2)
             _yellow "checking speedtest server ID"
-            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Unicom=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
-            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
             test_list "${CN_Mobile[@]}"
             ;;
-	1)
+	    1)
             checkping
             _yellow "checking speedtest server ID and find nearest server"
-            CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
+            CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
-            CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
+            CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
@@ -791,6 +796,7 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
+    rm -f /tmp/test
 }
 
 checkroot
