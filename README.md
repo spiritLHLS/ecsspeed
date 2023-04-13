@@ -41,7 +41,7 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 这里只展示CN地区的节点信息
 
-闭源收录服务器数量(实时)：2474
+闭源收录服务器数量(实时)：2475
 
 ### 分类数据
 
