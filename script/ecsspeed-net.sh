@@ -6,7 +6,6 @@
 ecsspeednetver="2023/04/13"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
-rm -f /tmp/test
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
@@ -664,15 +663,17 @@ get_nearest_data() {
         fi
     done <<< "$response"
     
+    rm -f /tmp/pingtest
     # 并行ping测试所有IP
     for (( i=0; i<${#data[@]}; i++ )); do
         { ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
-        ping_test "$ip" >> /tmp/test; }&
+        ping_test "$ip" >> /tmp/pingtest; }&
     done
     wait
     
     # 取IP顺序列表results
     output=$(cat /tmp/test)
+    rm -f /tmp/pingtest
     IFS=$'\n' read -rd '' -a lines <<<"$output"
     results=()
     for line in "${lines[@]}"; do
@@ -796,7 +797,6 @@ main() {
     selecttest
     start_time=$(date +%s)
     runtest
-    rm -f /tmp/test
 }
 
 checkroot
