@@ -541,6 +541,10 @@ print_end_time() {
     else
         echo " 总共花费      : ${time} 秒"
     fi
+    if [ ${time} -lt 30 ]
+    then
+        echo "本机连通性较差，可能导致测速失败"
+    fi
     date_time=$(date)
     # date_time=$(date +%Y-%m-%d" "%H:%M:%S)
     echo " 时间          : $date_time"
