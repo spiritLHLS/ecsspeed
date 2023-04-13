@@ -543,7 +543,7 @@ print_end_time() {
     fi
     if [ ${time} -lt 30 ]
     then
-        echo "本机连通性较差，可能导致测速失败"
+        echo " 本机连通性较差，可能导致测速失败"
     fi
     date_time=$(date)
     # date_time=$(date +%Y-%m-%d" "%H:%M:%S)
