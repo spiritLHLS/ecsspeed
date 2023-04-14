@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/13"
+ecsspeednetver="2023/04/14"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -366,8 +366,10 @@ download_speedtest_file() {
     fi
     local sys_bit="$1"
     if [[ -z "${CN}" || "${CN}" != true ]]; then
-        local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-        local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        local url1="https://filedown.me/Linux/Tool/speedtest_cli/ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
+        local url2="https://bintray.com/ookla/download/download_file?file_path=ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
+        # local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        # local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
         curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
         if [[ $? -ne 0 ]]; then
             _red "Error: Failed to download official speedtest-cli."
@@ -477,7 +479,8 @@ speed_test() {
         if [ $? -eq 0 ]; then
             local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
             local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
-            local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            local latency=$(grep -oP 'Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            # local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
             local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
                 if [[ $selection =~ ^[1-5]$ ]]; then
@@ -775,7 +778,7 @@ runtest() {
             CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
-	    _blue "就近节点如果缺少某一个运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
+	    _blue "就近节点若缺少某运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
