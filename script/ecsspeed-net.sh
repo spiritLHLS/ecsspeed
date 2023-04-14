@@ -814,7 +814,7 @@ checkerror(){
         _yellow "Unable to use the 1.2.0, back to 1.0.0"
         speedtest_ver="1.0.0"
         global_exit
-        install_speedtest > /dev/null 2>&1
+        ( install_speedtest > /dev/null 2>&1 )
         runtest
     fi
 }
