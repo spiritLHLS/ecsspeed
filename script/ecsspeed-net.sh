@@ -366,10 +366,13 @@ download_speedtest_file() {
     fi
     local sys_bit="$1"
     if [[ -z "${CN}" || "${CN}" != true ]]; then
-        local url1="https://filedown.me/Linux/Tool/speedtest_cli/ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
-        local url2="https://bintray.com/ookla/download/download_file?file_path=ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
-        # local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
-        # local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        if [ "$speedtest_ver" = "1.2.0" ]; then
+            local url1="https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+            local url2="https://dl.lamp.sh/files/ookla-speedtest-1.2.0-linux-${sys_bit}.tgz"
+        else
+            local url1="https://filedown.me/Linux/Tool/speedtest_cli/ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
+            local url2="https://bintray.com/ookla/download/download_file?file_path=ookla-speedtest-1.0.0-${sys_bit}-linux.tgz"
+        fi
         curl --fail -s -m 10 -o speedtest.tgz "${url1}" || curl --fail -s -m 10 -o speedtest.tgz "${url2}"
         if [[ $? -ne 0 ]]; then
             _red "Error: Failed to download official speedtest-cli."
@@ -479,8 +482,11 @@ speed_test() {
         if [ $? -eq 0 ]; then
             local dl_speed=$(awk '/Download/{print $3" "$4}' ./speedtest-cli/speedtest.log)
             local up_speed=$(awk '/Upload/{print $3" "$4}' ./speedtest-cli/speedtest.log)
-            local latency=$(grep -oP 'Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
-            # local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            if [ "$speedtest_ver" = "1.2.0" ]; then
+                local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            else
+                local latency=$(grep -oP 'Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
+            fi
             local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
                 if [[ $selection =~ ^[1-5]$ ]]; then
@@ -534,19 +540,19 @@ temp_head(){
 }
 
 print_end_time() {
-    echo "——————————————————————————————————————————————————————————————————————————————"
     end_time=$(date +%s)
     time=$(( ${end_time} - ${start_time} ))
+    echo "——————————————————————————————————————————————————————————————————————————————"
+    if [ ${time} -lt 30 ]
+    then
+        echo " 本机连通性较差，可能导致测速失败"
+    fi
     if [ ${time} -gt 60 ]; then
         min=$(expr $time / 60)
         sec=$(expr $time % 60)
         echo " 总共花费      : ${min} 分 ${sec} 秒"
     else
         echo " 总共花费      : ${time} 秒"
-    fi
-    if [ ${time} -lt 30 ]
-    then
-        echo " 本机连通性较差，可能导致测速失败"
     fi
     date_time=$(date)
     # date_time=$(date +%Y-%m-%d" "%H:%M:%S)
@@ -778,7 +784,7 @@ runtest() {
             CN_Unicom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             CN_Telecom=($(get_nearest_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
-	    _blue "就近节点若缺少某运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
+	        _blue "就近节点若缺少某运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
             temp_head
             test_list "${CN_Unicom[@]}"
             test_list "${CN_Telecom[@]}"
@@ -800,6 +806,19 @@ checkver(){
     export csv_date
 }
 
+checkerror(){
+    end_time=$(date +%s)
+    time=$(( ${end_time} - ${start_time} ))
+    if [ ${time} -lt 30 ]
+    then
+        _yellow "Unable to use the 1.2.0, back to 1.0.0"
+        speedtest_ver="1.0.0"
+        global_exit
+        install_speedtest > /dev/null 2>&1
+        runtest
+    fi
+}
+
 main() {
     preinfo
     selecttest
@@ -818,8 +837,10 @@ SystemInfo_GetSystemBit
 Check_JSONQuery
 check_cdn_file
 check_china
+speedtest_ver="1.2.0"
 install_speedtest
 checkver
 main
+checkerror
 print_end_time
 global_exit
