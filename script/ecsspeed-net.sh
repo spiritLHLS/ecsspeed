@@ -111,7 +111,8 @@ checkping() {
     _yellow "checking ping"
 	if  [ ! -e '/usr/bin/ping' ]; then
             _yellow "Installing ping"
-	        ! ${PACKAGE_INSTALL[int]} iputils-ping || ${PACKAGE_INSTALL[int]} ping > /dev/null 2>&1
+	    ${PACKAGE_INSTALL[int]} iputils-ping > /dev/null 2>&1
+	    ${PACKAGE_INSTALL[int]} ping > /dev/null 2>&1
 	fi
 }
 
