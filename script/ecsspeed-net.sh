@@ -457,7 +457,7 @@ speed_test() {
             local dl_speed=$(grep -oP 'Download: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local up_speed=$(grep -oP 'Upload: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local latency=$(grep -oP 'Latency: \K[\d\.]+' ./speedtest-cli/speedtest.log)
-            if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
+            if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
                 else
@@ -482,7 +482,7 @@ speed_test() {
             local latency=$(grep -oP 'Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
             # local latency=$(grep -oP 'Idle Latency:\s+\K[\d\.]+' ./speedtest-cli/speedtest.log)
             local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
-            if [[ -n "${dl_speed}" && -n "${up_speed}" && -n "${latency}" ]]; then
+            if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
                 if [[ $selection =~ ^[1-5]$ ]]; then
                     echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
                 else
