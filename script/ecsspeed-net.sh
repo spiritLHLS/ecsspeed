@@ -676,7 +676,7 @@ get_nearest_data() {
     wait
     
     # 取IP顺序列表results
-    output=$(cat /tmp/test)
+    output=$(cat /tmp/pingtest)
     rm -f /tmp/pingtest
     IFS=$'\n' read -rd '' -a lines <<<"$output"
     results=()
