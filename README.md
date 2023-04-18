@@ -73,6 +73,8 @@ admin@spiritlhl.net
 
 感谢 [@fscarmen](https://github.com/fscarmen) 提供的并发测ping支持
 
+感谢 [speedtest-go](https://github.com/showwin/speedtest-go) 提供的第三方测速内核
+
 # 免责声明
 
 * 本仓库仅供学习
