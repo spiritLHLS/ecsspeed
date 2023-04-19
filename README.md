@@ -68,8 +68,8 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 - [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
 - [x] 自动抓取 [speedtest.net](https://www.speedtest.net/) 节点信息结合已有信息去重并更新列表数据
-- [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速ID的测速脚本
-- [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速ID的测速脚本
+- [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器列表的测速脚本
+- [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器列表的测速脚本
 
 ## .cn数据
 
