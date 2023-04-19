@@ -1,5 +1,9 @@
 # ecsspeed
 
+自动更新测速服务器节点列表的网络基准测试脚本
+
+Network benchmarking script that automatically updates the list of speed measurement server nodes
+
 ## 说明
 
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
