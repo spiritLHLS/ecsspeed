@@ -37,29 +37,7 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 ## .cn数据
 
-北京时间每日7点半更新，感谢测速站点提供的服务
-
-这里只展示CN地区的节点信息
-
-闭源收录服务器数量(实时)：2486
-
-### 分类数据
-
-静态页面：https://spiritlhls.github.io/ecsspeed/
-
-#### 粗分类
-
-移动数据 - [mobile.csv](mobile.csv)
-
-电信数据 - [telecom.csv](telecom.csv)
-
-联通数据 - [unicom.csv](unicom.csv)
-
-香港数据 - [HK.csv](HK.csv)
-
-台湾数据 - [TW.csv](TW.csv)
-
-中国数据 - [CN.csv](CN.csv)
+仓库：https://github.com/spiritLHLS/speedtest.cn-CN-ID
 
 ## .net数据
 
