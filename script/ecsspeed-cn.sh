@@ -3,7 +3,7 @@
 # from https://github.com/spiritLHLS/ecsspeed
 
 
-ecsspeednetver="2023/04/19"
+ecsspeednetver="2023/04/24"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -126,7 +126,7 @@ checkping() {
 
 check_china(){
     if [[ -z "${CN}" ]]; then
-        if [[ $(curl -m 10 -s https://ipapi.co/json | grep 'China') != "" ]]; then
+        if [[ $(curl -m 10 -sL https://ipapi.co/json | grep 'China') != "" ]]; then
             _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
             read -e -r -p "是否选用中国镜像完成测速工具安装? [Y/n] " input
             case $input in
@@ -454,7 +454,7 @@ get_data() {
     if [[ -z "${CN}" || "${CN}" != true ]]; then
         local retries=0
         while [[ $retries -lt 3 ]]; do
-            response=$(curl -s --max-time 3 "$url")
+            response=$(curl -sL --max-time 3 "$url")
             if [[ $? -eq 0 ]]; then
                 break
             else
@@ -464,11 +464,11 @@ get_data() {
         done
         if [[ $retries -eq 3 ]]; then
             url="${cdn_success_url}${url}"
-            response=$(curl -s --max-time 6 "$url")
+            response=$(curl -sL --max-time 6 "$url")
         fi
     else
         url="${cdn_success_url}${url}"
-        response=$(curl -s --max-time 10 "$url")
+        response=$(curl -sL --max-time 10 "$url")
     fi
     ip_list=()
     city_list=()
@@ -513,7 +513,7 @@ get_nearest_data() {
     if [[ -z "${CN}" || "${CN}" != true ]]; then
         local retries=0
         while [[ $retries -lt 2 ]]; do
-            response=$(curl -s --max-time 2 "$url")
+            response=$(curl -sL --max-time 2 "$url")
             if [[ $? -eq 0 ]]; then
                 break
             else
@@ -523,11 +523,11 @@ get_nearest_data() {
         done
         if [[ $retries -eq 2 ]]; then
             url="${cdn_success_url}${url}"
-            response=$(curl -s --max-time 6 "$url")
+            response=$(curl -sL --max-time 6 "$url")
         fi
     else
         url="${cdn_success_url}${url}"
-        response=$(curl -s --max-time 10 "$url")
+        response=$(curl -sL --max-time 10 "$url")
     fi
     ip_list=()
     city_list=()
@@ -676,9 +676,9 @@ runtest() {
 }
 
 checkver(){
-    csv_date=$(curl -s --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+    csv_date=$(curl -sL --max-time 6 https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
     if [ $? -ne 0 ]; then
-        csv_date=$(curl -s --max-time 6 ${cdn_success_url}https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
+        csv_date=$(curl -sL --max-time 6 ${cdn_success_url}https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main/README.md | grep -oP '(?<=数据更新时间: ).*')
     fi
     export csv_date
 }
