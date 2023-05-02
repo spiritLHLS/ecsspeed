@@ -6,6 +6,8 @@ Network benchmarking script that automatically updates the list of speed measure
 
 ## 说明
 
+所有组件以及数据均来源于平台或已有的开源项目，无非开源部分，放心食用
+
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
 ```
