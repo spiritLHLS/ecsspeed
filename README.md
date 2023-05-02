@@ -112,8 +112,3 @@ Do not use any content of the Script project for commercial or illegal purposes,
 If any unit or individual believes that the script of the project may be suspected of infringing on their rights, they should promptly notify and provide proof of identity and ownership. We will delete the relevant script after receiving the certification document.
 
 Anyone who views this item in any way or directly or indirectly uses any script of the Script item should read this statement carefully. This warehouse reserves the right to change or supplement this disclaimer at any time. Once you have used and copied any relevant scripts or rules of the Script project, you are deemed to have accepted this disclaimer.
-
-
-## Stargazers over time
-
-[![Stargazers over time](https://starchart.cc/spiritLHLS/speedtest-crawler.svg)](https://github.com/spiritLHLS/speedtest-crawler)
