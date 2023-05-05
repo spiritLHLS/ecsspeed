@@ -666,31 +666,31 @@ runtest() {
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/TW.csv"))
             temp_head
-            test_list "${slist[@]}"
+            test_list "${slist[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
         6)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/HK.csv"))
             temp_head
-            test_list "${slist[@]}"
+            test_list "${slist[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
         5)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             temp_head
-            test_list "${slist[@]}"
+            test_list "${slist[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
         4)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             temp_head
-            test_list "${slist[@]}"
+            test_list "${slist[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
         3)
             _yellow "checking speedtest server ID"
             slist=($(get_data "${SERVER_BASE_URL}/CN_Unicom.csv"))
             temp_head
-            test_list "${slist[@]}"
+            test_list "${slist[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
 	    2)
             _yellow "checking speedtest server ID"
@@ -698,9 +698,9 @@ runtest() {
             CN_Telecom=($(get_data "${SERVER_BASE_URL}/CN_Telecom.csv"))
             CN_Mobile=($(get_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
             temp_head
-            test_list "${CN_Unicom[@]}"
-            test_list "${CN_Telecom[@]}"
-            test_list "${CN_Mobile[@]}"
+            test_list "${CN_Unicom[@]}" | tee ./speedtest-cli/speedlog.txt
+            test_list "${CN_Telecom[@]}" | tee ./speedtest-cli/speedlog.txt
+            test_list "${CN_Mobile[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
 	    1)
             checkping
@@ -710,9 +710,9 @@ runtest() {
             CN_Mobile=($(get_nearest_data "${SERVER_BASE_URL}/CN_Mobile.csv"))
 	        _blue "就近节点若缺少某运营商，那么该运营商连通性很差，建议使用对应运营商选项全测看看"
             temp_head
-            test_list "${CN_Unicom[@]}"
-            test_list "${CN_Telecom[@]}"
-            test_list "${CN_Mobile[@]}"
+            test_list "${CN_Unicom[@]}" | tee ./speedtest-cli/speedlog.txt
+            test_list "${CN_Telecom[@]}" | tee ./speedtest-cli/speedlog.txt
+            test_list "${CN_Mobile[@]}" | tee ./speedtest-cli/speedlog.txt
             ;;
         *)
             echo "Exit"
@@ -733,7 +733,7 @@ checkver(){
 checkerror(){
     end_time=$(date +%s)
     time=$(( ${end_time} - ${start_time} ))
-    if [ ${time} -lt 30 ]
+    if ! grep -qE "(台湾|香港|联通|电信|移动|Hong|Kong|Taiwan|Taipei)" ./speedtest-cli/speedlog.txt;
     then
         _yellow "Unable to use the 1.2.0, back to 1.0.0"
         speedtest_ver="1.0.0"
@@ -744,6 +744,7 @@ checkerror(){
 }
 
 main() {
+    rm -rf ./speedtest-cli/speedlog.txt
     preinfo
     selecttest
     start_time=$(date +%s)
