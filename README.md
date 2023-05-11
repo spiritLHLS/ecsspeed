@@ -66,6 +66,24 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
   
 </details>
 
+### 自动更新测试服务器列表的三网延迟测试脚本
+
+```
+bash <(wget -qO- bash.spiritlhl.net/ecs-ping)
+```
+
+或
+
+```
+bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-ping.sh)
+```
+
+或国内用
+
+```
+bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh)
+```
+
 ## 功能
 
 - [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
