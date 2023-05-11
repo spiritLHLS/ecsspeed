@@ -68,6 +68,8 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 ### 自动更新测试服务器列表的三网延迟测试脚本
 
+平均耗时10秒
+
 ```
 bash <(wget -qO- bash.spiritlhl.net/ecs-ping)
 ```
@@ -90,6 +92,7 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 - [x] 自动抓取 [speedtest.net](https://www.speedtest.net/) 节点信息结合已有信息去重并更新列表数据
 - [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器列表的测速脚本
 - [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器列表的测速脚本
+- [x] 自动更新测试服务器列表的三网Ping值测试脚本
 
 ## .cn数据
 
