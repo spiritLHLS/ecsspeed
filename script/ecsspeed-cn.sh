@@ -586,7 +586,7 @@ get_nearest_data() {
  
     rm -f /tmp/pingtest
     for (( i=0; i<${#data[@]}; i++ )); do
-        { ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
+        { ip=$(echo "${ip_list[$i]}")
         ping_test "$ip" >> /tmp/pingtest; }&
     done
     wait
