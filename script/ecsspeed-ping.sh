@@ -390,18 +390,23 @@ SERVER_BASE_URL_net="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-
 (get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Telecom.csv") &
 (get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Mobile.csv") &
 wait
-files=("pinglogunicom" "pinglogtelecom" "pinglogmobile" "pinglogCN_Unicom" "pinglogCN_Telecom" "pinglogCN_Mobile")
-declare -a a b c d e f
-for filename in "${files[@]}"
+declare -A fileVarMap=(
+    ["pinglogunicom"]="a"
+    ["pinglogtelecom"]="b"
+    ["pinglogmobile"]="c"
+    ["pinglogCN_Unicom"]="d"
+    ["pinglogCN_Telecom"]="e"
+    ["pinglogCN_Mobile"]="f"
+)
+for filename in "${!fileVarMap[@]}"
 do
-    case $filename in
-        pinglogunicom) a=($(cat "/tmp/$filename")) ;;
-        pinglogtelecom) b=($(cat "/tmp/$filename")) ;;
-        pinglogmobile) c=($(cat "/tmp/$filename")) ;;
-        pinglogCN_Unicom) d=($(cat "/tmp/$filename")) ;;
-        pinglogCN_Telecom) e=($(cat "/tmp/$filename")) ;;
-        pinglogCN_Mobile) f=($(cat "/tmp/$filename")) ;;
-    esac
+    if [[ -f "/tmp/$filename" ]]; then
+        variable="${fileVarMap[$filename]}"
+        declare -a "$variable=($(cat "/tmp/$filename"))"
+    else
+        variable="${fileVarMap[$filename]}"
+        declare -a "$variable=()"
+    fi
 done
 # 组合
 array_names=("a" "d" "b" "e" "c" "f")
