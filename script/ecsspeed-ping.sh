@@ -13,7 +13,7 @@ else
   echo "Locale set to $utf8_locale"
 fi
 
-ecsspeednetver="2023/05/11"
+ecsspeednetver="2023/05/12"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -80,6 +80,14 @@ checkping() {
             _yellow "Installing ping"
 	    ${PACKAGE_INSTALL[int]} iputils-ping > /dev/null 2>&1
 	    ${PACKAGE_INSTALL[int]} ping > /dev/null 2>&1
+	fi
+}
+
+checknslookup() {
+    _yellow "checking nslookup"
+	if ! command -v nslookup &> /dev/null; then
+        _yellow "Installing dnsutils"
+	    ${PACKAGE_INSTALL[int]} dnsutils
 	fi
 }
 
@@ -153,6 +161,8 @@ get_nearest_data_net() {
         fi
     done <<< "$response"
     
+    # local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
+    # local pingname=$(echo "$last_part" | cut -d'.' -f1)
     rm -f /tmp/pingtest
     # 并行ping测试所有IP
     for (( i=0; i<${#data[@]}; i++ )); do
@@ -183,12 +193,119 @@ get_nearest_data_net() {
         for item in "${data[@]}"; do
             if [[ "$item" == *"$result"* ]]; then
                 name=$(echo "$item" | cut -d',' -f2)
-                sorted_data+=("$name,$ping_ip")
+                sorted_data+=("$name,$ping_ip,$result")
             fi
         done
     done
 
     # 返回结果
+    echo "${sorted_data[@]}"
+}
+
+get_ip_from_url() {
+    nslookup -querytype=A $1 | awk '/^Name:/ {next;} /^Address: / { print $2 }'
+}
+
+is_ipv4() {
+    local ip=$1
+    local regex="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+    if [[ $ip =~ $regex ]]; then
+        return 0  # 符合IPv4格式
+    else
+        return 1  # 不符合IPv4格式
+    fi
+}
+
+get_nearest_data_cn() {
+    local url="$1"
+    local data=()
+    local response
+    if [[ -z "${CN}" || "${CN}" != true ]]; then
+        local retries=0
+        while [[ $retries -lt 2 ]]; do
+            response=$(curl -sL --max-time 2 "$url")
+            if [[ $? -eq 0 ]]; then
+                break
+            else
+                retries=$((retries+1))
+                sleep 1
+            fi
+        done
+        if [[ $retries -eq 2 ]]; then
+            url="${cdn_success_url}${url}"
+            response=$(curl -sL --max-time 6 "$url")
+        fi
+    else
+        url="${cdn_success_url}${url}"
+        response=$(curl -sL --max-time 10 "$url")
+    fi
+    ip_list=()
+    city_list=()
+    while read line; do
+        if [[ -n "$line" ]]; then
+            # local id=$(echo "$line" | awk -F ',' '{print $1}')
+            local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $9}')
+            city=${city/市/}; city=${city/中国/}
+            local host=$(echo "$line" | awk -F ',' '{print $6}')
+            local host_url=$(echo $host | sed 's/:.*//')
+            if [[ "$host,$city" == "host,city" || "$city" == *"香港"* || "$city" == *"台湾"* ]]; then
+                continue
+            fi
+            if is_ipv4 "$host_url"; then
+                local ip="$host_url"
+            else
+                local ip=$(get_ip_from_url ${host_url})
+            fi
+            if [[ $url == *"mobile"* ]]; then
+                city="移动${city}"
+            elif [[ $url == *"telecom"* ]]; then
+                city="电信${city}"
+            elif [[ $url == *"unicom"* ]]; then
+                city="联通${city}" 
+            fi
+            if [[ ! " ${ip_list[@]} " =~ " ${ip} " ]] && [[ ! " ${city_list[@]} " =~ " ${city} " ]]; then
+                data+=("$host,$city,$ip")
+                ip_list+=("$ip")
+                city_list+=("$city")
+            fi
+        fi
+    done <<< "$response"
+    
+    # local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
+    # local pingname=$(echo "$last_part" | cut -d'.' -f1)
+    rm -f /tmp/pingtest
+    for (( i=0; i<${#data[@]}; i++ )); do
+        { ip=$(echo "${ip_list[$i]}")
+        ping_test "$ip" >> /tmp/pingtest; }&
+    done
+    wait
+    
+    output=$(cat /tmp/pingtest)
+    rm -f /tmp/pingtest
+    IFS=$'\n' read -rd '' -a lines <<<"$output"
+    results=()
+    pings=()
+    for line in "${lines[@]}"; do
+        field=$(echo "$line" | cut -d',' -f1)
+        if [ ! -z "$(echo "$line" | cut -d',' -f2)" ]; then
+            results+=("$field")
+            pings+=("$(echo "$line" | cut -d',' -f2 | cut -d'.' -f1)")
+        fi
+    done
+
+    # 比对data取IP对应的数组
+    sorted_data=()
+    for index in "${!results[@]}"; do
+        result="${results[$index]}"
+        ping_ip="${pings[$index]}"
+        for item in "${data[@]}"; do
+            if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
+                name=$(echo "$item" | cut -d',' -f2)
+                sorted_data+=("$name,$ping_ip,$result")
+            fi
+        done
+    done
+
     echo "${sorted_data[@]}"
 }
 
@@ -244,8 +361,6 @@ preinfo() {
 	echo "——————————————————————————————————————————————————————————————————————————————"
 }
 
-
-
 print_end_time() {
     end_time=$(date +%s)
     time=$(( ${end_time} - ${start_time} ))
@@ -268,15 +383,50 @@ checkroot
 checkcurl
 checkwget
 check_cdn_file
+checknslookup
+checkping
 check_china
-SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 PINGS_LIST=()
 preinfo
 start_time=$(date +%s)
-PINGS_LIST+=($(get_nearest_data_net "${SERVER_BASE_URL}/CN_Unicom.csv"))
-PINGS_LIST+=($(get_nearest_data_net "${SERVER_BASE_URL}/CN_Telecom.csv"))
-PINGS_LIST+=($(get_nearest_data_net "${SERVER_BASE_URL}/CN_Mobile.csv"))
+# 获取数据
+SERVER_BASE_URL_cn="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
+a=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/unicom.csv"))
+b=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/telecom.csv"))
+c=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/mobile.csv"))
+SERVER_BASE_URL_net="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
+d=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Unicom.csv"))
+e=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Telecom.csv"))
+f=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Mobile.csv"))
+# 组合
+array_names=("a" "d" "b" "e" "c" "f")
+for i in "${array_names[@]}"; do
+  array_name="${i}[@]"
+  PINGS_LIST+=("${!array_name}")
+done
+# 去重
+used_elements=()
+filtered_pings=()
+for ping in "${PINGS_LIST[@]}"; do
+    element=$(echo "$ping" | cut -d',' -f3)
+    if [[ ! " ${used_elements[@]} " =~ " ${element} " ]]; then
+        filtered_pings+=("$ping")
+        used_elements+=("$element")
+    fi
+done
+PINGS_LIST=("${filtered_pings[@]}")
+# 去除IP部分
+processed_list=()
+for item in "${PINGS_LIST[@]}"
+do
+    IFS=',' read -ra parts <<< "$item"
+    processed_item="${parts[0]},${parts[1]}"
+    processed_list+=("$processed_item")
+done
+PINGS_LIST=("${processed_list[@]}")
+# echo "${PINGS_LIST[@]}"
 # echo "${PINGS_LIST[@]}" | tr ' ' '\n' | sort -t',' -k2 -n | awk '{ORS=(NR%3==0?RS:FS)}1'
+# 打印
 counter=0
 for ping in "${PINGS_LIST[@]}"; do
     line=$(echo "$ping" | sed 's/,/ /g')
@@ -295,13 +445,21 @@ for ping in "${PINGS_LIST[@]}"; do
         color='\033[0;31m'  # 中红色
     fi
     line=$(echo "$line" | cut -d ' ' -f 1 | sed 's/5G//g')
-    length=$(get_string_length " ${line}")
-    if [ $length -gt 8 ]; then
-        echo -ne " ${line}\t   ${color}${value} "
-    elif [ $length -gt 16 ]; then
-        echo -ne " ${line}\t\t   ${color}${value} "
+    length1=$(get_string_length " ${line}")
+    length2=${#value}
+    if [ $length1 -gt 8 ]; then
+        tabs="\t   "
+    elif [ $length1 -gt 16 ]; then
+        tabs="\t\t   "
     else
-        echo -ne " ${line}\t\t\t   ${color}${value} "
+        tabs="\t\t\t   "
+    fi
+    if [ $length2 -eq 1 ]; then
+        echo -ne " ${line}${tabs}${color}${value}   "
+    elif [ $length2 -eq 2 ]; then
+        echo -ne " ${line}${tabs}${color}${value}  "
+    else
+        echo -ne " ${line}${tabs}${color}${value} "
     fi
     color='\033[0m'  # 重置为默认颜色
     echo -ne "${color}|"
@@ -314,3 +472,4 @@ if ((counter % 3 != 0)); then
     echo
 fi
 print_end_time
+rm -rf /tmp/pingtest*
