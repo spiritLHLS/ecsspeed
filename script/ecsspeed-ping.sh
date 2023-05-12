@@ -93,11 +93,18 @@ checknslookup() {
 
 check_china(){
     if [[ -z "${CN}" ]]; then
-        if [[ $(curl -m 10 -sL https://ipapi.co/json | grep 'China') != "" ]]; then
+        if [[ $(curl -m 6 -sL https://ipapi.co/json | grep 'China') != "" ]]; then
             _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
             echo "使用中国镜像"
             CN=true
-        fi
+        else
+            if [[ $? -ne 0 ]]; then
+	    	if [[ $(curl -m 6 -sL cip.cc) =~ "中国" ]]; then
+		    _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
+            	    echo "使用中国镜像"
+            	    CN=true
+		fi
+	    fi
     fi
 }
 
