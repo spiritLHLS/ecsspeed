@@ -121,6 +121,8 @@ ping_test() {
 
 get_nearest_data_net() {
     local url="$1"
+    local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
+    local pingname=$(echo "$last_part" | cut -d'.' -f1)
     local data=()
     local response
     if [[ -z "${CN}" || "${CN}" != true ]]; then
@@ -135,7 +137,7 @@ get_nearest_data_net() {
             fi
         done
         if [[ $retries -eq 2 ]]; then
-            url="${cdn_success_url}${url}"
+            local url="${cdn_success_url}${url}"
             response=$(curl -sL --max-time 6 "$url")
         fi
     else
@@ -160,23 +162,22 @@ get_nearest_data_net() {
             data+=("$id,$city,$ip")
         fi
     done <<< "$response"
-    
-    # local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
-    # local pingname=$(echo "$last_part" | cut -d'.' -f1)
-    rm -f /tmp/pingtest
+
+    rm -f "/tmp/pingtest${pingname}"
     # 并行ping测试所有IP
     for (( i=0; i<${#data[@]}; i++ )); do
-        { ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
-        ping_test "$ip" >> /tmp/pingtest; }&
+        { local ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
+        ping_test "$ip" >> "/tmp/pingtest${pingname}"; }&
     done
     wait
     
     # 取IP顺序列表results
-    output=$(cat /tmp/pingtest)
-    rm -f /tmp/pingtest
+    local output=$(cat "/tmp/pingtest${pingname}")
+    rm -f "/tmp/pingtest${pingname}"
+    local lines ; local IFS ; local line ; local field ;
     IFS=$'\n' read -rd '' -a lines <<<"$output"
-    results=()
-    pings=()
+    local results=()
+    local pings=()
     for line in "${lines[@]}"; do
         field=$(echo "$line" | cut -d',' -f1)
         if [ ! -z "$(echo "$line" | cut -d',' -f2)" ]; then
@@ -186,7 +187,8 @@ get_nearest_data_net() {
     done
     
     # 比对data取IP对应的数组
-    sorted_data=()
+    local sorted_data=()
+    local item ; local index ; local name ; local result ; local ping_ip ;
     for index in "${!results[@]}"; do
         result="${results[$index]}"
         ping_ip="${pings[$index]}"
@@ -198,8 +200,7 @@ get_nearest_data_net() {
         done
     done
 
-    # 返回结果
-    echo "${sorted_data[@]}"
+    echo "${sorted_data[@]}" > "/tmp/pinglog${pingname}"
 }
 
 get_ip_from_url() {
@@ -218,6 +219,8 @@ is_ipv4() {
 
 get_nearest_data_cn() {
     local url="$1"
+    local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
+    local pingname=$(echo "$last_part" | cut -d'.' -f1)
     local data=()
     local response
     if [[ -z "${CN}" || "${CN}" != true ]]; then
@@ -239,8 +242,8 @@ get_nearest_data_cn() {
         url="${cdn_success_url}${url}"
         response=$(curl -sL --max-time 10 "$url")
     fi
-    ip_list=()
-    city_list=()
+    local ip_list=()
+    local city_list=()
     while read line; do
         if [[ -n "$line" ]]; then
             # local id=$(echo "$line" | awk -F ',' '{print $1}')
@@ -270,21 +273,20 @@ get_nearest_data_cn() {
             fi
         fi
     done <<< "$response"
-    
-    # local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
-    # local pingname=$(echo "$last_part" | cut -d'.' -f1)
-    rm -f /tmp/pingtest
+
+    rm -f "/tmp/pingtest${pingname}"
     for (( i=0; i<${#data[@]}; i++ )); do
-        { ip=$(echo "${ip_list[$i]}")
-        ping_test "$ip" >> /tmp/pingtest; }&
+        { local ip=$(echo "${ip_list[$i]}")
+        ping_test "$ip" >> "/tmp/pingtest${pingname}"; }&
     done
     wait
     
-    output=$(cat /tmp/pingtest)
-    rm -f /tmp/pingtest
+    local output=$(cat "/tmp/pingtest${pingname}")
+    rm -f "/tmp/pingtest${pingname}"
+    local lines ; local IFS ; local line ; local field ;
     IFS=$'\n' read -rd '' -a lines <<<"$output"
-    results=()
-    pings=()
+    local results=()
+    local pings=()
     for line in "${lines[@]}"; do
         field=$(echo "$line" | cut -d',' -f1)
         if [ ! -z "$(echo "$line" | cut -d',' -f2)" ]; then
@@ -294,7 +296,8 @@ get_nearest_data_cn() {
     done
 
     # 比对data取IP对应的数组
-    sorted_data=()
+    local sorted_data=()
+    local item ; local index ; local name ; local result ; local ping_ip ;
     for index in "${!results[@]}"; do
         result="${results[$index]}"
         ping_ip="${pings[$index]}"
@@ -306,7 +309,7 @@ get_nearest_data_cn() {
         done
     done
 
-    echo "${sorted_data[@]}"
+    echo "${sorted_data[@]}" > "/tmp/pinglog${pingname}"
 }
 
 get_string_length() {
@@ -391,13 +394,27 @@ preinfo
 start_time=$(date +%s)
 # 获取数据
 SERVER_BASE_URL_cn="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
-a=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/unicom.csv"))
-b=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/telecom.csv"))
-c=($(get_nearest_data_cn "${SERVER_BASE_URL_cn}/mobile.csv"))
+(get_nearest_data_cn "${SERVER_BASE_URL_cn}/unicom.csv") &
+(get_nearest_data_cn "${SERVER_BASE_URL_cn}/telecom.csv") &
+(get_nearest_data_cn "${SERVER_BASE_URL_cn}/mobile.csv") &
 SERVER_BASE_URL_net="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
-d=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Unicom.csv"))
-e=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Telecom.csv"))
-f=($(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Mobile.csv"))
+(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Unicom.csv") &
+(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Telecom.csv") &
+(get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Mobile.csv") &
+wait
+files=("pinglogunicom" "pinglogtelecom" "pinglogmobile" "pinglogCN_Unicom" "pinglogCN_Telecom" "pinglogCN_Mobile")
+declare -a a b c d e f
+for filename in "${files[@]}"
+do
+    case $filename in
+        pinglogunicom) a=($(cat "/tmp/$filename")) ;;
+        pinglogtelecom) b=($(cat "/tmp/$filename")) ;;
+        pinglogmobile) c=($(cat "/tmp/$filename")) ;;
+        pinglogCN_Unicom) d=($(cat "/tmp/$filename")) ;;
+        pinglogCN_Telecom) e=($(cat "/tmp/$filename")) ;;
+        pinglogCN_Mobile) f=($(cat "/tmp/$filename")) ;;
+    esac
+done
 # 组合
 array_names=("a" "d" "b" "e" "c" "f")
 for i in "${array_names[@]}"; do
@@ -472,4 +489,4 @@ if ((counter % 3 != 0)); then
     echo
 fi
 print_end_time
-rm -rf /tmp/pingtest*
+rm -rf /tmp/ping*
