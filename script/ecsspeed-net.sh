@@ -12,7 +12,7 @@ else
   export LANGUAGE="$utf8_locale"
   echo "Locale set to $utf8_locale"
 fi
-
+export DEBIAN_FRONTEND=noninteractive
 ecsspeednetver="2023/05/05"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
