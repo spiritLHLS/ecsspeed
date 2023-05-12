@@ -12,7 +12,7 @@ else
   echo "Locale set to $utf8_locale"
 fi
 
-ecsspeednetver="2023/04/24"
+ecsspeednetver="2023/05/12"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -456,6 +456,16 @@ get_ip_from_url() {
     nslookup -querytype=A $1 | awk '/^Name:/ {next;} /^Address: / { print $2 }'
 }
 
+is_ipv4() {
+    local ip=$1
+    local regex="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+    if [[ $ip =~ $regex ]]; then
+        return 0  # 符合IPv4格式
+    else
+        return 1  # 不符合IPv4格式
+    fi
+}
+
 get_data() {
     local url="$1"
     local data=()
@@ -491,7 +501,11 @@ get_data() {
             if [[ "$host,$city" == "host,city" ]]; then
                 continue
             fi
-            local ip=$(get_ip_from_url ${host_url})
+            if is_ipv4 "$host_url"; then
+                local ip="$host_url"
+            else
+                local ip=$(get_ip_from_url ${host_url})
+            fi
             if [[ $url == *"mobile"* ]]; then
                 city="移动${city}"
             elif [[ $url == *"telecom"* ]]; then
@@ -550,7 +564,11 @@ get_nearest_data() {
             if [[ "$host,$city" == "host,city" ]]; then
                 continue
             fi
-            local ip=$(get_ip_from_url ${host_url})
+            if is_ipv4 "$host_url"; then
+                local ip="$host_url"
+            else
+                local ip=$(get_ip_from_url ${host_url})
+            fi
             if [[ $url == *"mobile"* ]]; then
                 city="移动${city}"
             elif [[ $url == *"telecom"* ]]; then
