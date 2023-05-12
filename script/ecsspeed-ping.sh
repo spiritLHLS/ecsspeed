@@ -394,10 +394,10 @@ preinfo
 start_time=$(date +%s)
 # 获取数据
 SERVER_BASE_URL_cn="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
+SERVER_BASE_URL_net="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 (get_nearest_data_cn "${SERVER_BASE_URL_cn}/unicom.csv") &
 (get_nearest_data_cn "${SERVER_BASE_URL_cn}/telecom.csv") &
 (get_nearest_data_cn "${SERVER_BASE_URL_cn}/mobile.csv") &
-SERVER_BASE_URL_net="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 (get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Unicom.csv") &
 (get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Telecom.csv") &
 (get_nearest_data_net "${SERVER_BASE_URL_net}/CN_Mobile.csv") &
