@@ -72,7 +72,7 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 ### 自动更新测试服务器列表的三网延迟测试脚本
 
-平均耗时10秒
+平均耗时15~30秒
 
 ```
 bash <(wget -qO- bash.spiritlhl.net/ecs-ping)
