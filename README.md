@@ -10,6 +10,8 @@ Network benchmarking script that automatically updates the list of speed measure
 
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
+日常推荐使用
+
 ```
 bash <(wget -qO- bash.spiritlhl.net/ecs-net)
 ```
@@ -39,6 +41,8 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 </details>
 
 ### 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器ID的测速脚本
+
+单线程测速
 
 ```
 bash <(wget -qO- bash.spiritlhl.net/ecs-cn)
