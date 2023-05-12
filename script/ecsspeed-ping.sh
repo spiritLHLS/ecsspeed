@@ -105,6 +105,7 @@ check_china(){
             	    CN=true
 		fi
 	    fi
+	fi
     fi
 }
 
