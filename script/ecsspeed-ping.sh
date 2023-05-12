@@ -166,10 +166,13 @@ get_nearest_data_net() {
         ping_test "$ip" >> "/tmp/pingtest${pingname}"; }&
     done
     wait
-    
+    sleep 0.5
     # 取IP顺序列表results
+    if [ ! -f "/tmp/pingtest${pingname}" ]; then
+	echo "" > "/tmp/pinglog${pingname}"
+	return
+    fi
     local output=$(cat "/tmp/pingtest${pingname}")
-    rm -f "/tmp/pingtest${pingname}"
     local lines ; local IFS ; local line ; local field ;
     IFS=$'\n' read -rd '' -a lines <<<"$output"
     local results=()
@@ -276,9 +279,12 @@ get_nearest_data_cn() {
         ping_test "$ip" >> "/tmp/pingtest${pingname}"; }&
     done
     wait
-    
+    sleep 0.5
+    if [ ! -f "/tmp/pingtest${pingname}" ]; then
+	echo "" > "/tmp/pinglog${pingname}"
+	return
+    fi
     local output=$(cat "/tmp/pingtest${pingname}")
-    rm -f "/tmp/pingtest${pingname}"
     local lines ; local IFS ; local line ; local field ;
     IFS=$'\n' read -rd '' -a lines <<<"$output"
     local results=()
