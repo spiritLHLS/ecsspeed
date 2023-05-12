@@ -111,6 +111,7 @@ get_nearest_data_net() {
     local url="$1"
     local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
     local pingname=$(echo "$last_part" | cut -d'.' -f1)
+    rm -f "/tmp/pingtest${pingname}"
     local data=()
     local response
     if [[ -z "${CN}" || "${CN}" != true ]]; then
@@ -150,8 +151,7 @@ get_nearest_data_net() {
             data+=("$id,$city,$ip")
         fi
     done <<< "$response"
-
-    rm -f "/tmp/pingtest${pingname}"
+    
     # 并行ping测试所有IP
     for (( i=0; i<${#data[@]}; i++ )); do
         { local ip=$(echo "${data[$i]}" | awk -F ',' '{print $3}')
@@ -209,6 +209,7 @@ get_nearest_data_cn() {
     local url="$1"
     local last_part=$(echo "$url" | rev | cut -d'/' -f1 | rev)
     local pingname=$(echo "$last_part" | cut -d'.' -f1)
+    rm -f "/tmp/pingtest${pingname}"
     local data=()
     local response
     if [[ -z "${CN}" || "${CN}" != true ]]; then
@@ -262,7 +263,6 @@ get_nearest_data_cn() {
         fi
     done <<< "$response"
 
-    rm -f "/tmp/pingtest${pingname}"
     for (( i=0; i<${#data[@]}; i++ )); do
         { local ip=$(echo "${ip_list[$i]}")
         ping_test "$ip" >> "/tmp/pingtest${pingname}"; }&
