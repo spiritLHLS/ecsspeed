@@ -95,20 +95,8 @@ check_china(){
     if [[ -z "${CN}" ]]; then
         if [[ $(curl -m 10 -sL https://ipapi.co/json | grep 'China') != "" ]]; then
             _yellow "根据ipapi.co提供的信息，当前IP可能在中国"
-            read -e -r -p "是否选用中国镜像完成相关工具安装? [Y/n] " input
-            case $input in
-                [yY][eE][sS] | [yY])
-                    echo "使用中国镜像"
-                    CN=true
-                ;;
-                [nN][oO] | [nN])
-                    echo "不使用中国镜像"
-                ;;
-                *)
-                    echo "使用中国镜像"
-                    CN=true
-                ;;
-            esac
+            echo "使用中国镜像"
+            CN=true
         fi
     fi
 }
