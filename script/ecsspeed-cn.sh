@@ -561,7 +561,7 @@ get_nearest_data() {
             city=${city/市/}; city=${city/中国/}
             local host=$(echo "$line" | awk -F ',' '{print $6}')
             local host_url=$(echo $host | sed 's/:.*//')
-            if [[ "$host,$city" == "host,city" ]]; then
+            if [[ "$host,$city" == "host,city" || "$city" == *"香港"* || "$city" == *"台湾"* ]]; then
                 continue
             fi
             if is_ipv4 "$host_url"; then
