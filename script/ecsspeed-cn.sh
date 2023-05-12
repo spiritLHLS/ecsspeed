@@ -603,7 +603,8 @@ get_nearest_data() {
     sorted_data=()
     for result in "${results[@]}"; do
         for item in "${data[@]}"; do
-            if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
+#             if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
+	      if [[ "$item" == *"$result"* ]]; then
                 host=$(echo "$item" | cut -d',' -f1)
                 name=$(echo "$item" | cut -d',' -f2)
                 sorted_data+=("$host,$name")
