@@ -577,7 +577,7 @@ get_nearest_data() {
                 city="联通${city}" 
             fi
             if [[ ! " ${ip_list[@]} " =~ " ${ip} " ]] && [[ ! " ${city_list[@]} " =~ " ${city} " ]]; then
-                data+=("$host,$city")
+                data+=("$host,$city,$ip")
                 ip_list+=("$ip")
                 city_list+=("$city")
             fi
@@ -603,7 +603,7 @@ get_nearest_data() {
     sorted_data=()
     for result in "${results[@]}"; do
         for item in "${data[@]}"; do
-            if [[ "$item" == *"$result"* ]]; then
+            if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
                 host=$(echo "$item" | cut -d',' -f1)
                 name=$(echo "$item" | cut -d',' -f2)
                 sorted_data+=("$host,$name")
