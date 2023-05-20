@@ -372,13 +372,13 @@ speed_test() {
             fi
             if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
                 if [[ $selection =~ ^[1-5]$ ]]; then
-                    echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+                    echo -e "${nodeName}\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
                 else
                     length=$(get_string_length "$nodeName")
                     if [ $length -ge 8 ]; then
-		    	echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+		    	echo -e "${nodeName}\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
                     else
-		    	echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
+		    	echo -e "${nodeName}\t\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
                     fi
                 fi
             fi
