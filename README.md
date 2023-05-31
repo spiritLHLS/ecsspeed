@@ -90,6 +90,10 @@ bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/r
 bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh)
 ```
 
+效果图
+
+![图片](https://github.com/spiritLHLS/ecsspeed/assets/103393591/4c8f39a2-1286-47ae-a397-c46f3792340b)
+
 ## 功能
 
 - [x] 自动抓取 [speedtest.cn](https://www.speedtest.cn/) 节点信息结合已有信息去重并更新列表数据
