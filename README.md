@@ -10,7 +10,7 @@ Network benchmarking script that automatically updates the list of speed measure
 
 ## 待解决事项
 
-全球网络延迟测试 - 待添加
+全球网络延迟测试 - 待添加 - (思路卡住了，267个国家如果全部取一个IP出来并发测ping，怕不是会被警告，思考取哪些国家中)
 
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
