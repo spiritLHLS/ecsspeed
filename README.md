@@ -8,6 +8,10 @@ Network benchmarking script that automatically updates the list of speed measure
 
 所有组件以及数据均来源于平台或已有的开源项目，无非开源部分，放心食用
 
+## 待解决事项
+
+全球网络延迟测试 - 待添加
+
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
 日常推荐使用
