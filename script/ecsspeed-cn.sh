@@ -155,6 +155,13 @@ check_china(){
     fi
 }
 
+statistics_of_run-times() {
+COUNT=$(
+  curl -4 -ksm1 "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FspiritLHLS%2Fecsspeed&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=&edge_flat=true" 2>&1 ||
+  curl -6 -ksm1 "https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FspiritLHLS%2Fecsspeed&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=&edge_flat=true" 2>&1) &&
+  TODAY=$(expr "$COUNT" : '.*\s\([0-9]\{1,\}\)\s/.*') && TOTAL=$(expr "$COUNT" : '.*/\s\([0-9]\{1,\}\)\s.*')
+}
+
 download_speedtest_file() {
     file="/root/speedtest-cli/speedtest-go"
     if [[ -e "$file" ]]; then
@@ -495,6 +502,7 @@ preinfo() {
 	echo "             Repo：https://github.com/spiritLHLS/ecsspeed "
 	echo "             节点更新: $csv_date  | 脚本更新: $ecsspeednetver "
 	echo "——————————————————————————————————————————————————————————————————————————————"
+    _green "脚本当天运行次数:${TODAY}，累计运行次数:${TOTAL}"
 }
 
 selecttest() {
@@ -601,6 +609,7 @@ check_cdn_file
 check_china
 install_speedtest
 checkver
+statistics_of_run-times
 main
 print_end_time
 global_exit
