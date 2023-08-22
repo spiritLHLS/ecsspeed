@@ -1,98 +1,101 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<title>CSV Files</title>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-	</head>
-	<body>
-		<div class="container mt-5">
-			<h1 class="mb-4">CSV Files</h1>
-			<div class="row">
-				<div class="col-md-6">
-					<h5>Choose a CSV file:</h5>
-					<ul class="list-group mb-3" id="csv-files"></ul>
-				</div>
-				<div class="col-md-6">
-					<h5>Display options:</h5>
-					<form class="form-inline">
-						<div class="form-group mr-3">
-							<label for="file-name" class="mr-2">File Name:</label>
-							<input type="text" class="form-control" id="file-name" value="CN.csv">
-						</div>
-						<div class="form-group mr-3">
-							<label for="row-count" class="mr-2">Row Count:</label>
-							<input type="number" class="form-control" id="row-count" value="10" min="1">
-						</div>
-						<button type="submit" class="btn btn-primary" id="load-btn">Load</button>
-					</form>
-				</div>
+
+<head>
+	<meta charset="utf-8">
+	<title>CSV Files</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+	<div class="container mt-5">
+		<h1 class="mb-4">CSV Files</h1>
+		<div class="row">
+			<div class="col-md-6">
+				<h5>Choose a CSV file:</h5>
+				<ul class="list-group mb-3" id="csv-files"></ul>
 			</div>
-			<div class="table-responsive mt-4">
-				<table class="table table-bordered table-striped" id="csv-table"></table>
+			<div class="col-md-6">
+				<h5>Display options:</h5>
+				<form class="form-inline">
+					<div class="form-group mr-3">
+						<label for="file-name" class="mr-2">File Name:</label>
+						<input type="text" class="form-control" id="file-name" value="CN.csv">
+					</div>
+					<div class="form-group mr-3">
+						<label for="row-count" class="mr-2">Row Count:</label>
+						<input type="number" class="form-control" id="row-count" value="10" min="1">
+					</div>
+					<button type="submit" class="btn btn-primary" id="load-btn">Load</button>
+				</form>
 			</div>
 		</div>
-		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"
-				integrity="sha384-X/YKevJxfoZ0xOrXn3uV7JePAfu/3uV7JePAfu/xQ2bEwIsB25egxV7fZgzYjHtn"
-				crossorigin="anonymous"></script>
-		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-		<script>
-			var owner = "spiritLHLS"; // 仓库拥有者
-			var repo = "ecsspeed"; // 仓库名称
-			var path = "results"; // 文件路径
+		<div class="table-responsive mt-4">
+			<table class="table table-bordered table-striped" id="csv-table"></table>
+		</div>
+	</div>
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"
+		integrity="sha384-X/YKevJxfoZ0xOrXn3uV7JePAfu/3uV7JePAfu/xQ2bEwIsB25egxV7fZgzYjHtn"
+		crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	<script>
+		var owner = "spiritLHLS"; // 仓库拥有者
+		var repo = "ecsspeed"; // 仓库名称
+		var path = "results"; // 文件路径
 
-			fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`)
-				.then(response => response.json())
-				.then(data => {
-					var csvFiles = data.filter(file => file.type === "file" && file.name.endsWith(".csv"));
-					csvFiles.forEach(file => {
-						var li = document.createElement("li");
-						var a = document.createElement("a");
-						a.href = file.download_url;
-						a.target = "_blank";
-						a.innerText = file.name;
-						li.appendChild(a);
-						document.getElementById("csv-files").appendChild(li);
+		fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`)
+			.then(response => response.json())
+			.then(data => {
+				var csvFiles = data.filter(file => file.type === "file" && file.name.endsWith(".csv"));
+				csvFiles.forEach(file => {
+					var li = document.createElement("li");
+					var a = document.createElement("a");
+					a.href = file.download_url;
+					a.target = "_blank";
+					a.innerText = file.name;
+					li.appendChild(a);
+					document.getElementById("csv-files").appendChild(li);
+				});
+				loadCsvFile("CN.csv", 10);
+			})
+			.catch(error => console.error(error));
+
+		function loadCsvFile(fileName, rowCount) {
+			var url = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}/${encodeURIComponent(fileName)}`;
+			var table = document.getElementById("csv-table");
+			table.innerHTML = "";
+
+			fetch(url)
+				.then(response => response.text())
+				.then(text => {
+					var rows = text.trim().split("\n");
+					rows.slice(0, rowCount).forEach(rowText => {
+						var row = document.createElement("tr");
+						var cols = rowText.split(",");
+						cols.forEach(colText => {
+							var col = document.createElement("td");
+							col.innerText = colText;
+							row.appendChild(col);
+						});
+						table.appendChild(row);
 					});
-					loadCsvFile("CN.csv", 10);
 				})
 				.catch(error => console.error(error));
-			
-			function loadCsvFile(fileName, rowCount) {
-				var url = `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}/${encodeURIComponent(fileName)}`;
-				var table = document.getElementById("csv-table");
-				table.innerHTML = "";
+		}
 
-				fetch(url)
-					.then(response => response.text())
-					.then(text => {
-						var rows = text.trim().split("\n");
-						rows.slice(0, rowCount).forEach(rowText => {
-							var row = document.createElement("tr");
-							var cols = rowText.split(",");
-							cols.forEach(colText => {
-								var col = document.createElement("td");
-								col.innerText = colText;
-								row.appendChild(col);
-							});
-							table.appendChild(row);
-						});
-					})
-					.catch(error => console.error(error));
-			}
+		document.getElementById("load-btn").addEventListener("click", function () {
+			var fileName = document.getElementById("file-name").value;
+			var rowCount = parseInt(document.getElementById("row-count").value);
+			loadCsvFile(fileName, rowCount);
+		});
 
-			document.getElementById("load-btn").addEventListener("click", function() {
-				var fileName = document.getElementById("file-name").value;
-				var rowCount = parseInt(document.getElementById("row-count").value);
-				loadCsvFile(fileName, rowCount);
-			});
+		window.addEventListener("hashchange", function () {
+			var fileName = decodeURIComponent(location.hash.substring(1));
+			document.getElementById("file-name").value = fileName;
+			loadCsvFile(fileName, 10);
+		});
+	</script>
+</body>
 
-			window.addEventListener("hashchange", function() {
-				var fileName = decodeURIComponent(location.hash.substring(1));
-				document.getElementById("file-name").value = fileName;
-				loadCsvFile(fileName, 10);
-			});
-		</script>
-	</body>
 </html>
