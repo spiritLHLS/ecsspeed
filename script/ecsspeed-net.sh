@@ -12,8 +12,10 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeednetver="2023/05/05"
+ecsspeednetver="2024/05/06"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
+Speedtest_Go_version="1.6.12"
+BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
@@ -176,13 +178,13 @@ download_speedtest_file() {
         if [ "$sys_bit" = "aarch64" ]; then
             sys_bit="arm64"
         fi
-        local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_Linux_${sys_bit}.tar.gz"
+        local url3="https://github.com/showwin/speedtest-go/releases/download/v${Speedtest_Go_version}/speedtest-go_${Speedtest_Go_version}_Linux_${sys_bit}.tar.gz"
         curl --fail -sL -m 10 -o speedtest.tar.gz "${url3}" || curl --fail -sL -m 15 -o speedtest.tar.gz "${cdn_success_url}${url3}"
     else
         if [ "$sys_bit" = "aarch64" ]; then
             sys_bit="arm64"
         fi
-        local url3="https://github.com/showwin/speedtest-go/releases/download/v1.6.0/speedtest-go_1.6.0_Linux_${sys_bit}.tar.gz"
+        local url3="https://github.com/showwin/speedtest-go/releases/download/v${Speedtest_Go_version}/speedtest-go_${Speedtest_Go_version}_Linux_${sys_bit}.tar.gz"
         curl -o speedtest.tar.gz "${cdn_success_url}${url3}"
         if [ $? -eq 0 ]; then
             _green "Used unofficial speedtest-go"
@@ -246,9 +248,9 @@ speed_test() {
     local nodeName="$2"
     if [ ! -f "./speedtest-cli/speedtest" ]; then
         if [ -z "$1" ]; then
-            ./speedtest-cli/speedtest-go >./speedtest-cli/speedtest.log 2>&1
+            ./speedtest-cli/speedtest-go --ua="${BrowserUA}" >./speedtest-cli/speedtest.log 2>&1
         else
-            ./speedtest-cli/speedtest-go --server=$1 >./speedtest-cli/speedtest.log 2>&1
+            ./speedtest-cli/speedtest-go --ua="${BrowserUA}" --server=$1 >./speedtest-cli/speedtest.log 2>&1
         fi
         if [ $? -eq 0 ]; then
             local dl_speed=$(grep -oP 'Download: \K[\d\.]+' ./speedtest-cli/speedtest.log)
