@@ -12,7 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeednetver="2024/05/06"
+ecsspeednetver="2024/05/18"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
 Speedtest_Go_version="1.6.12"
 BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
@@ -511,14 +511,15 @@ preinfo() {
 
 selecttest() {
     echo -e "测速类型:"
-    echo -e "\t${GREEN}1.${PLAIN}三网测速(就近节点)\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}8.${PLAIN}退出测速"
+    echo -e "\t${GREEN}1.${PLAIN}三网测速(就近节点)\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}10.${PLAIN}退出测速"
     echo -e "\t${GREEN}2.${PLAIN}三网测速(所有节点)\t${GREEN}4.${PLAIN}电信\t\t${GREEN}7.${PLAIN}台湾"
-    echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动"
+    echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动\t\t8.${PLAIN}日本"
+    echo -e "\t\t\t\t\t\t9.${PLAIN}新加坡"
     echo "——————————————————————————————————————————————————————————————————————————————"
     while :; do
         echo
         reading "请输入数字选择测速类型: " selection
-        if [[ ! $selection =~ ^[1-8]$ ]]; then
+        if [[ ! $selection =~ ^(10|[1-9])$ ]]; then
             echo -ne "  ${RED}输入错误${PLAIN}, 请输入正确的数字!"
         else
             break
@@ -528,6 +529,18 @@ selecttest() {
 
 runtest() {
     case ${selection} in
+    9)
+        _yellow "checking speedtest servers"
+        slist=($(get_data "${SERVER_BASE_URL}/SG.csv"))
+        temp_head
+        test_list "${slist[@]}"
+        ;;
+    8)
+        _yellow "checking speedtest servers"
+        slist=($(get_data "${SERVER_BASE_URL}/JP.csv"))
+        temp_head
+        test_list "${slist[@]}"
+        ;;
     7)
         _yellow "checking speedtest servers"
         slist=($(get_data "${SERVER_BASE_URL}/TW.csv"))
