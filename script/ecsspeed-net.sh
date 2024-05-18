@@ -525,8 +525,8 @@ selecttest() {
     echo -e "测速类型:"
     echo -e "\t${GREEN}1.${PLAIN}三网测速(就近节点)\t${GREEN}3.${PLAIN}联通\t\t${GREEN}6.${PLAIN}香港\t\t${GREEN}10.${PLAIN}退出测速"
     echo -e "\t${GREEN}2.${PLAIN}三网测速(所有节点)\t${GREEN}4.${PLAIN}电信\t\t${GREEN}7.${PLAIN}台湾"
-    echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动\t\t8.${PLAIN}日本"
-    echo -e "\t\t\t\t\t\t9.${PLAIN}新加坡"
+    echo -e "\t\t\t\t${GREEN}5.${PLAIN}移动\t\t${GREEN}8.${PLAIN}日本"
+    echo -e "\t\t\t\t\t\t${GREEN}9.${PLAIN}新加坡"
     echo "——————————————————————————————————————————————————————————————————————————————"
     while :; do
         echo
