@@ -46,6 +46,8 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 
 </details>
 
+![图片](https://github.com/spiritLHLS/ecsspeed/assets/103393591/dd74a3b1-502f-42ba-8552-d01e92b98add)
+
 ### 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器ID的测速脚本
 
 单线程测速
@@ -75,6 +77,8 @@ bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubus
 支持国内服务器测试(有判断是否为国内机器)，但由于国内服务器带宽过小，会很慢，详见初次运行的显示
   
 </details>
+
+![图片](https://github.com/spiritLHLS/ecsspeed/assets/103393591/eb2ac1fd-6cc4-4a7b-846f-b47bb5970e16)
 
 ### 自动更新测试服务器列表的三网延迟测试脚本
 
