@@ -624,12 +624,14 @@ checkver() {
 checkerror() {
     end_time=$(date +%s)
     time=$((${end_time} - ${start_time}))
-    if ! grep -qE "(新加坡|日本|台湾|香港|联通|电信|移动|Hong|Kong|Taiwan|Taipei)" ./speedtest-cli/speedlog.txt; then
-        _yellow "Unable to use the 1.2.0, back to 1.0.0"
-        speedtest_ver="1.0.0"
-        global_exit
-        (install_speedtest >/dev/null 2>&1)
-        runtest
+    if [ -f ./speedtest-cli/speedlog.txt ]; then
+        if ! grep -qE "(新加坡|日本|台湾|香港|联通|电信|移动|Hong|Kong|Taiwan|Taipei)" ./speedtest-cli/speedlog.txt; then
+            _yellow "Unable to use the 1.2.0, back to 1.0.0"
+            speedtest_ver="1.0.0"
+            global_exit
+            (install_speedtest >/dev/null 2>&1)
+            runtest
+        fi
     fi
 }
 
