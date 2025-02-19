@@ -1,6 +1,8 @@
 # ecsspeed
 
-[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FspiritLHLS%2Fecsspeed&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com) [<img src="https://api.gitsponsors.com/api/badge/img?id=620266969" height="20">](https://api.gitsponsors.com/api/badge/link?p=GCStSB23e3cNXwxTqx/gO720Dq73dEpvkB0m7LUXBCfyLnIw0wfapCRy2/MUPp1Z4paTrbTFcx756kJk/0lpZbtI9n39xh5+qeCxOWJaCkqb9/CMvl5uUAQiSwV/TFybGHsTFlzHBH9s9cEuh9w9eA==)
+[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FspiritLHLS%2Fecsspeed&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
+
+[<img src="https://api.gitsponsors.com/api/badge/img?id=620266969" height="20">](https://api.gitsponsors.com/api/badge/link?p=GCStSB23e3cNXwxTqx/gO720Dq73dEpvkB0m7LUXBCfyLnIw0wfapCRy2/MUPp1Z4paTrbTFcx756kJk/0lpZbtI9n39xh5+qeCxOWJaCkqb9/CMvl5uUAQiSwV/TFybGHsTFlzHBH9s9cEuh9w9eA==)
 
 自动更新测速服务器节点列表的网络基准测试脚本
 
@@ -31,7 +33,7 @@ bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/r
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh)
+bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh)
 ```
 
 <details>
@@ -65,7 +67,7 @@ bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/r
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-cn.sh)
+bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-cn.sh)
 ```
 
 <details>
@@ -97,7 +99,7 @@ bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/r
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://ghproxy.com/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh)
+bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh)
 ```
 
 效果图
