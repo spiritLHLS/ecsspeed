@@ -10,10 +10,6 @@ Network benchmarking script that automatically updates the list of speed measure
 
 所有组件以及数据均来源于平台或已有的开源项目，无非开源部分，放心食用
 
-## 待解决事项
-
-全球网络延迟测试 - 待添加 - (思路卡住了，267个国家如果全部取一个IP出来并发测ping，怕不是会被警告，思考取哪些国家中)
-
 ### 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器ID的测速脚本
 
 日常推荐使用
@@ -110,6 +106,7 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 - [x] 自动抓取 [speedtest.net](https://www.speedtest.net/) 节点信息结合已有信息去重并更新列表数据
 - [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器列表的测速脚本
 - [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器列表的测速脚本
+- [x] 对应中国境内各省份的IP信息，使用 [icmp_targets](https://github.com/spiritLHLS/icmp_targets) 补充ping测试的地址
 - [x] 自动更新测试服务器列表的三网Ping值测试脚本
 
 ## .cn数据
@@ -120,9 +117,13 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 
 仓库：https://github.com/spiritLHLS/speedtest.net-CN-ID
 
+## icmp数据
+
+仓库: https://github.com/spiritLHLS/icmp_targets
+
 ### 交流
 
-admin@spiritlhl.net
+hithamlin871@gmail.com
 
 ### 致谢
 
