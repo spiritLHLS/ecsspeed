@@ -12,8 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeednetver="2023/05/12"
-SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
+ecsspeedpingver="2025/04/25"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
@@ -380,7 +379,7 @@ preinfo() {
     echo "—————————————————————————————— ecsspeed-ping —————————————————————————————————"
     echo "             bash <(wget -qO- bash.spiritlhl.net/ecs-ping)"
     echo "             Repo：https://github.com/spiritLHLS/ecsspeed "
-    echo "             脚本更新: $ecsspeednetver "
+    echo "             脚本更新: $ecsspeedpingver "
     echo "——————————————————————————————————————————————————————————————————————————————"
 }
 

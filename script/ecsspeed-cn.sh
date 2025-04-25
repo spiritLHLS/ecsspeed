@@ -12,7 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeednetver="2024/05/18"
+ecsspeedcnver="2025/04/25"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
 Speedtest_Go_version="1.6.12"
 BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
@@ -503,7 +503,7 @@ preinfo() {
     echo "———————————————————————————————— ecsspeed-cn —————————————————————————————————"
     echo "             bash <(wget -qO- bash.spiritlhl.net/ecs-cn)"
     echo "             Repo：https://github.com/spiritLHLS/ecsspeed "
-    echo "             节点更新: $csv_date  | 脚本更新: $ecsspeednetver "
+    echo "             节点更新: $csv_date  | 脚本更新: $ecsspeedcnver "
     echo "——————————————————————————————————————————————————————————————————————————————"
     _green "脚本当天运行次数:${TODAY}，累计运行次数:${TOTAL}"
 }

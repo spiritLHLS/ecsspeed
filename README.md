@@ -106,7 +106,6 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 - [x] 自动抓取 [speedtest.net](https://www.speedtest.net/) 节点信息结合已有信息去重并更新列表数据
 - [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器列表的测速脚本
 - [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器列表的测速脚本
-- [x] 对应中国境内各省份的IP信息，使用 [icmp_targets](https://github.com/spiritLHLS/icmp_targets) 补充ping测试的地址
 - [x] 自动更新测试服务器列表的三网Ping值测试脚本
 
 ## .cn数据
@@ -116,10 +115,6 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 ## .net数据
 
 仓库：https://github.com/spiritLHLS/speedtest.net-CN-ID
-
-## icmp数据
-
-仓库: https://github.com/spiritLHLS/icmp_targets
 
 ### 交流
 
