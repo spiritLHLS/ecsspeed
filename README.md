@@ -116,6 +116,12 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 
 仓库：https://github.com/spiritLHLS/speedtest.net-CN-ID
 
+## 其他测速工具
+
+https://github.com/oneclickvirt/ecs
+
+包含部分私有国内测速节点，不进行公开，但支持更多的地区
+
 ### 交流
 
 hithamlin871@gmail.com
