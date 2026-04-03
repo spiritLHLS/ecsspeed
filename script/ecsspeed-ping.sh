@@ -505,7 +505,7 @@ for ping in "${PINGS_LIST[@]}"; do
     else
         color='\033[0;31m' # 中红色
     fi
-    line=$(echo "$line" | cut -d ' ' -f 1 | sed 's/5G//g')
+    line=$(echo "$line" | cut -d ' ' -f 1 | sed 's/^[0-9]*-speedtest\.[a-z]*-//;s/5G//g')
     length1=$(get_string_length " ${line}")
     length2=${#value}
     if [ $length1 -gt 16 ]; then

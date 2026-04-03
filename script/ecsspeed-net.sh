@@ -249,6 +249,16 @@ get_string_length() {
     echo $length
 }
 
+pad_str() {
+    local str="$1"
+    local width="$2"
+    local len
+    len=$(get_string_length "$str")
+    local pad=$((width - len))
+    [ "$pad" -lt 1 ] && pad=1
+    printf "%s%*s" "$str" "$pad" ""
+}
+
 speed_test() {
     local nodeName="$2"
     if [ ! -f "./speedtest-cli/speedtest" ]; then
@@ -262,16 +272,7 @@ speed_test() {
             local up_speed=$(grep -oP 'Upload: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             local latency=$(grep -oP 'Latency: \K[\d\.]+' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
-                if [[ $selection =~ ^[1-5]$ ]]; then
-                    echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
-                else
-                    length=$(get_string_length "$nodeName")
-                    if [ $length -ge 8 ]; then
-                        echo -e "${nodeName}\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
-                    else
-                        echo -e "${nodeName}\t\t ${up_speed}Mbps\t ${dl_speed}Mbps\t ${latency}ms\t"
-                    fi
-                fi
+                echo "$(pad_str "${nodeName}" 24)$(pad_str "${up_speed}Mbps" 16)$(pad_str "${dl_speed}Mbps" 16)${latency}ms"
             fi
         fi
     else
@@ -290,16 +291,7 @@ speed_test() {
             fi
             local packet_loss=$(awk -F': +' '/Packet Loss/{if($2=="Not available."){print "NULL"}else{print $2}}' ./speedtest-cli/speedtest.log)
             if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
-                if [[ $selection =~ ^[1-5]$ ]]; then
-                    echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
-                else
-                    length=$(get_string_length "$nodeName")
-                    if [ $length -ge 8 ]; then
-                        echo -e "${nodeName}\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
-                    else
-                        echo -e "${nodeName}\t\t ${up_speed}\t ${dl_speed}\t ${latency}\t  $packet_loss"
-                    fi
-                fi
+                echo "$(pad_str "${nodeName}" 24)$(pad_str "${up_speed}" 16)$(pad_str "${dl_speed}" 16)$(pad_str "${latency}" 12)${packet_loss}"
             fi
         fi
     fi
@@ -320,19 +312,10 @@ test_list() {
 
 temp_head() {
     echo "——————————————————————————————————————————————————————————————————————————————"
-    if [[ $selection =~ ^[1-5]$ ]]; then
-        if [ -f "/root/speedtest-cli/speedtest" ]; then
-            echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
-        else
-            echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟"
-        fi
+    if [ -f "/root/speedtest-cli/speedtest" ]; then
+        echo "$(pad_str "ID 位置" 24)$(pad_str "上传速度" 16)$(pad_str "下载速度" 16)$(pad_str "延迟" 12)丢包率"
     else
-        if [ -f "/root/speedtest-cli/speedtest" ]; then
-            echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟\t  丢包率"
-        else
-
-            echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟"
-        fi
+        echo "$(pad_str "ID 位置" 24)$(pad_str "上传速度" 16)$(pad_str "下载速度" 16)延迟"
     fi
 }
 

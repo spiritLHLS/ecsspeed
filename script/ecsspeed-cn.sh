@@ -230,6 +230,16 @@ get_string_length() {
     echo $length
 }
 
+pad_str() {
+    local str="$1"
+    local width="$2"
+    local len
+    len=$(get_string_length "$str")
+    local pad=$((width - len))
+    [ "$pad" -lt 1 ] && pad=1
+    printf "%s%*s" "$str" "$pad" ""
+}
+
 speed_test() {
     local nodeName="$2"
     if [ -z "$1" ]; then
@@ -245,16 +255,7 @@ speed_test() {
             latency=$(awk '{printf "%.2f", $1}' <<<"${latency}")
         fi
         if [[ -n "${dl_speed}" || -n "${up_speed}" || -n "${latency}" ]]; then
-            if [[ $selection =~ ^[1-5]$ ]]; then
-                echo -e "${nodeName}\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
-            else
-                length=$(get_string_length "$nodeName")
-                if [ $length -ge 8 ]; then
-                    echo -e "${nodeName}\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
-                else
-                    echo -e "${nodeName}\t\t ${up_speed} Mbps\t ${dl_speed} Mbps\t ${latency} ms\t"
-                fi
-            fi
+            echo "$(pad_str "${nodeName}" 24)$(pad_str "${up_speed} Mbps" 16)$(pad_str "${dl_speed} Mbps" 16)${latency} ms"
         fi
     fi
 }
@@ -275,11 +276,7 @@ test_list() {
 
 temp_head() {
     echo "——————————————————————————————————————————————————————————————————————————————"
-    if [[ $selection =~ ^[1-5]$ ]]; then
-        echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟"
-    else
-        echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟"
-    fi
+    echo "$(pad_str "ID 位置" 24)$(pad_str "上传速度" 16)$(pad_str "下载速度" 16)延迟"
 }
 
 print_end_time() {
