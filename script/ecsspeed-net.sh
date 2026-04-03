@@ -12,7 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeednetver="2026/02/28"
+ecsspeednetver="2026/04/03"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 Speedtest_Go_version="1.6.12"
 BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
@@ -314,7 +314,7 @@ test_list() {
         id=$(echo "${list[i]}" | cut -d',' -f1)
         name=$(echo "${list[i]}" | cut -d',' -f2)
         # echo "$id $name"
-        speed_test "$id" "$name"
+        speed_test "$id" "${id} ${name}"
     done
 }
 
@@ -322,16 +322,16 @@ temp_head() {
     echo "——————————————————————————————————————————————————————————————————————————————"
     if [[ $selection =~ ^[1-5]$ ]]; then
         if [ -f "/root/speedtest-cli/speedtest" ]; then
-            echo -e "位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
+            echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟\t  丢包率"
         else
-            echo -e "位置\t         上传速度\t 下载速度\t 延迟"
+            echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟"
         fi
     else
         if [ -f "/root/speedtest-cli/speedtest" ]; then
-            echo -e "位置\t\t 上传速度\t 下载速度\t 延迟\t  丢包率"
+            echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟\t  丢包率"
         else
 
-            echo -e "位置\t\t 上传速度\t 下载速度\t 延迟"
+            echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟"
         fi
     fi
 }

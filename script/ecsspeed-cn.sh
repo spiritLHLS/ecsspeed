@@ -12,7 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeedcnver="2026/02/28"
+ecsspeedcnver="2026/04/03"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.cn-CN-ID/main"
 Speedtest_Go_version="1.6.12"
 BrowserUA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
@@ -266,18 +266,19 @@ test_list() {
     fi
     for ((i = 0; i < ${#list[@]}; i += 1)); do
         host=$(echo "${list[i]}" | cut -d',' -f1)
-        name=$(echo "${list[i]}" | cut -d',' -f2)
-        # echo "$host $name"
-        speed_test "$host" "$name"
+        id=$(echo "${list[i]}" | cut -d',' -f2)
+        name=$(echo "${list[i]}" | cut -d',' -f3)
+        # echo "$host $id $name"
+        speed_test "$host" "${id} ${name}"
     done
 }
 
 temp_head() {
     echo "——————————————————————————————————————————————————————————————————————————————"
     if [[ $selection =~ ^[1-5]$ ]]; then
-        echo -e "位置\t         上传速度\t 下载速度\t 延迟"
+        echo -e "ID 位置\t         上传速度\t 下载速度\t 延迟"
     else
-        echo -e "位置\t\t 上传速度\t 下载速度\t 延迟"
+        echo -e "ID 位置\t\t 上传速度\t 下载速度\t 延迟"
     fi
 }
 
@@ -366,7 +367,7 @@ get_data() {
     local city_list=()
     while read line; do
         if [[ -n "$line" ]]; then
-            # local id=$(echo "$line" | awk -F ',' '{print $1}')
+            local id=$(echo "$line" | awk -F ',' '{print $1}')
             local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $9}')
             city=${city/市/}
             city=${city/中国/}
@@ -390,7 +391,7 @@ get_data() {
                 city="联通${city}"
             fi
             if [[ ! " ${ip_list[@]} " =~ " ${ip} " ]] && [[ ! " ${city_list[@]} " =~ " ${city} " ]]; then
-                data+=("$host,$city")
+                data+=("$host,$id,$city")
                 ip_list+=("$ip")
                 city_list+=("$city")
             fi
@@ -432,7 +433,7 @@ get_nearest_data() {
     local city_list=()
     while read line; do
         if [[ -n "$line" ]]; then
-            # local id=$(echo "$line" | awk -F ',' '{print $1}')
+            local id=$(echo "$line" | awk -F ',' '{print $1}')
             local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $9}')
             city=${city/市/}
             city=${city/中国/}
@@ -456,7 +457,7 @@ get_nearest_data() {
                 city="联通${city}"
             fi
             if [[ ! " ${ip_list[@]} " =~ " ${ip} " ]] && [[ ! " ${city_list[@]} " =~ " ${city} " ]]; then
-                data+=("$host,$city,$ip")
+                data+=("$host,$id,$city,$ip")
                 ip_list+=("$ip")
                 city_list+=("$city")
             fi
@@ -502,10 +503,11 @@ get_nearest_data() {
     local name
     for result in "${results[@]}"; do
         for item in "${data[@]}"; do
-            if [[  "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
+            if [[  "$(echo "$item" | cut -d',' -f4)" == "$result" ]]; then
                 host=$(echo "$item" | cut -d',' -f1)
-                name=$(echo "$item" | cut -d',' -f2)
-                sorted_data+=("$host,$name")
+                local itemid=$(echo "$item" | cut -d',' -f2)
+                name=$(echo "$item" | cut -d',' -f3)
+                sorted_data+=("$host,$itemid,$name")
             fi
         done
     done

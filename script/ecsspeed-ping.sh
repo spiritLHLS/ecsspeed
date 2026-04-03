@@ -12,7 +12,7 @@ else
     echo "Locale set to $utf8_locale"
 fi
 export DEBIAN_FRONTEND=noninteractive
-ecsspeedpingver="2026/02/28"
+ecsspeedpingver="2026/04/03"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
@@ -209,8 +209,9 @@ get_nearest_data_net() {
         ping_ip="${pings[$index]}"
         for item in "${data[@]}"; do
             if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
+                local netid=$(echo "$item" | cut -d',' -f1)
                 name=$(echo "$item" | cut -d',' -f2)
-                sorted_data+=("$name,$ping_ip,$result")
+                sorted_data+=("${netid}-speedtest.net-${name},$ping_ip,$result")
             fi
         done
     done
@@ -262,7 +263,7 @@ get_nearest_data_cn() {
     local city_list=()
     while read line; do
         if [[ -n "$line" ]]; then
-            # local id=$(echo "$line" | awk -F ',' '{print $1}')
+            local id=$(echo "$line" | awk -F ',' '{print $1}')
             local city=$(echo "$line" | sed 's/ //g' | awk -F ',' '{print $9}')
             city=${city/市/}
             city=${city/中国/}
@@ -286,7 +287,7 @@ get_nearest_data_cn() {
                 city="联通${city}"
             fi
             if [[ ! " ${ip_list[@]} " =~ " ${ip} " ]] && [[ ! " ${city_list[@]} " =~ " ${city} " ]]; then
-                data+=("$host,$city,$ip")
+                data+=("$id,$host,$city,$ip")
                 ip_list+=("$ip")
                 city_list+=("$city")
             fi
@@ -339,9 +340,10 @@ get_nearest_data_cn() {
         result="${results[$index]}"
         ping_ip="${pings[$index]}"
         for item in "${data[@]}"; do
-            if [[ "$(echo "$item" | cut -d',' -f3)" == "$result" ]]; then
-                name=$(echo "$item" | cut -d',' -f2)
-                sorted_data+=("$name,$ping_ip,$result")
+            if [[ "$(echo "$item" | cut -d',' -f4)" == "$result" ]]; then
+                local cnid=$(echo "$item" | cut -d',' -f1)
+                name=$(echo "$item" | cut -d',' -f3)
+                sorted_data+=("${cnid}-speedtest.cn-${name},$ping_ip,$result")
             fi
         done
     done
