@@ -15,19 +15,19 @@ Network benchmarking script that automatically updates the list of speed measure
 日常推荐使用
 
 ```
-bash <(wget -qO- bash.spiritlhl.net/ecs-net)
+wget -qO- https://bash.spiritlhl.net/ecs-net | sh
 ```
 
 或
 
 ```
-bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh)
+curl -fsSL https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-net.sh | sh
 ```
 
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh)
+wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh | sh
 ```
 
 <details>
@@ -38,7 +38,7 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 
 支持国内服务器测试(有判断是否为国内机器)，但由于国内服务器带宽过小，会很慢，详见初次运行的显示
 
-当官方CLI安装失败(如罕见的架构或者官方网站访问失败时)自动使用 [speedtest-go](https://github.com/showwin/speedtest-go) 作为替代品测速
+默认优先使用 [speedtest-go](https://github.com/showwin/speedtest-go) 测速，并在运行时自动检测版本和校验下载文件
 
 </details>
 
@@ -49,19 +49,19 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 单线程测速
 
 ```
-bash <(wget -qO- bash.spiritlhl.net/ecs-cn)
+wget -qO- https://bash.spiritlhl.net/ecs-cn | sh
 ```
 
 或
 
 ```
-bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-cn.sh)
+curl -fsSL https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-cn.sh | sh
 ```
 
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-cn.sh)
+wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-cn.sh | sh
 ```
 
 <details>
@@ -81,19 +81,19 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 平均耗时10~15秒
 
 ```
-bash <(wget -qO- bash.spiritlhl.net/ecs-ping)
+wget -qO- https://bash.spiritlhl.net/ecs-ping | sh
 ```
 
 或
 
 ```
-bash <(wget -qO- --no-check-certificate https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-ping.sh)
+curl -fsSL https://github.com/spiritLHLS/ecsspeed/raw/main/script/ecsspeed-ping.sh | sh
 ```
 
 或国内用
 
 ```
-bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh)
+wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh | sh
 ```
 
 效果图
@@ -107,6 +107,27 @@ bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.gi
 - [x] 对应 [speedtest.net](https://www.speedtest.net/) 的自动更新测速服务器列表的测速脚本
 - [x] 对应 [speedtest.cn](https://www.speedtest.cn/) 的自动更新测速服务器列表的测速脚本
 - [x] 自动更新测试服务器列表的三网Ping值测试脚本
+
+## 通用参数
+
+三个入口脚本均支持 `sh` 和 `bash`，会优先使用 `curl`，不可用时回退到 `wget`。非 root 环境不会直接退出，缺失依赖无法自动安装时会降级提示。
+
+```
+sh script/ecsspeed-net.sh --type 1 -log
+sh script/ecsspeed-cn.sh --type 4 -json --json-file result.json
+sh script/ecsspeed-ping.sh -log ping.log
+```
+
+常用参数：
+
+- `-t, --type N`：非交互选择测速类型，`1` 为三网就近节点，`2` 为三网全部节点，`3` 到 `9` 为指定运营商或地区。
+- `-json, --json`：以 JSON 导出结果，可配合 `--json-file FILE` 写入文件。
+- `-log, --log [FILE]`：记录运行日志，未指定文件时写入工作目录。
+- `-c, --config FILE`：读取配置文件，可配置 `TIMEOUT`、`RETRIES`、`PING_CONCURRENCY`、`CDN_URLS`、`SPEEDTEST_GO_VERSION` 等。
+- `--work-dir DIR`：指定测速二进制、日志和缓存目录。
+- `--no-precheck`：跳过测速前节点连通性预检。
+
+脚本默认优先使用 [speedtest-go](https://github.com/showwin/speedtest-go)，运行时检测最新版本并通过官方 `checksums.txt` 进行 SHA256 校验后安装。支持 Linux、macOS、FreeBSD、OpenBSD 常见架构，包括 x86_64、i386、arm64、armv5/6/7、s390x、riscv64、ppc64le、ppc64、loong64 和部分 mips 变体。
 
 ## .cn数据
 
