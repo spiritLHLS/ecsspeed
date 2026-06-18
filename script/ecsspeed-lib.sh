@@ -996,6 +996,7 @@ fetch_net_records() {
             if (id == "id" || id == "" || city == "" || ip == "") next;
             gsub(/ /, "", city);
             name=prefix city;
+            sub(/^日本日本/, "日本", name);
             key=id "|" name "|" host "|" ip;
             if (!seen[key]++) print id "\t" id "\t" name "\t" ip "\t" host;
         }
@@ -1192,7 +1193,7 @@ normalize_metric() {
     cleaned=$(printf '%s' "$val" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     [ -z "$cleaned" ] && { printf 'NULL\n'; return; }
     metric_num=$(printf '%s\n' "$cleaned" | awk '{print $1}')
-    metric_unit=$(printf '%s\n' "$cleaned" | awk '{$1=""; sub(/^[ \t]+/,""); print}')
+    metric_unit=$(printf '%s\n' "$cleaned" | awk '{$1=""; sub(/^[ \t]+/,""); print}' | sed 's/[[:space:]]*(.*//')
     [ -n "$metric_unit" ] || metric_unit=$unit
     case "$metric_num" in
         *[!0-9.]*|'') printf '%s\n' "$cleaned" | sed 's/[[:space:]][[:space:]]*/ /g' ;;
@@ -1202,9 +1203,9 @@ normalize_metric() {
 
 parse_speedtest_log() {
     log=$1
-    dl=$(awk -F: '/Download:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$log")
-    up=$(awk -F: '/Upload:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$log")
-    latency=$(awk -F: '/Latency:/ {gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2; exit}' "$log")
+    dl=$(sed -n 's/^Download:[[:space:]]*//p' "$log" | head -1)
+    up=$(sed -n 's/^Upload:[[:space:]]*//p' "$log" | head -1)
+    latency=$(sed -n 's/^Latency:[[:space:]]*//p' "$log" | head -1)
     dl=$(normalize_metric "$dl" "Mbps")
     up=$(normalize_metric "$up" "Mbps")
     latency=$(printf '%s' "$latency" | sed 's/ms//;s/[[:space:]]//g')
