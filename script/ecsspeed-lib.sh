@@ -749,6 +749,21 @@ temp_head() {
     print_line "$(pad_str "ID 位置" 24)$(pad_str "上传速度" 16)$(pad_str "下载速度" 16)延迟"
 }
 
+print_menu_line() {
+    plain=$1
+    colored=$2
+    if [ -n "$NO_COLOR" ]; then
+        print_line "$plain"
+        return
+    fi
+    if [ "$JSON_MODE" = "1" ]; then
+        printf '%b\n' "$colored" >&2
+    else
+        printf '%b\n' "$colored"
+    fi
+    log_plain "$plain"
+}
+
 preinfo() {
     table_rule
     print_line "             $MODE_TITLE"
@@ -773,19 +788,24 @@ selecttest() {
         selection=$CLI_SELECTION
         return 0
     fi
-    if [ ! -t 0 ]; then
-        selection=1
-        warn "non-interactive input detected; default to test type 1"
-        return 0
-    fi
     print_line "测速类型:"
-    print_line "  1.三网测速(就近节点)  3.联通  6.香港  10.退出测速"
-    print_line "  2.三网测速(所有节点)  4.电信  7.台湾"
-    print_line "                         5.移动  8.日本  9.新加坡"
+    print_menu_line "	1.三网测速(就近节点)	3.联通		6.香港		10.退出测速" "	${GREEN}1.${PLAIN}三网测速(就近节点)	${GREEN}3.${PLAIN}联通		${GREEN}6.${PLAIN}香港		${GREEN}10.${PLAIN}退出测速"
+    print_menu_line "	2.三网测速(所有节点)	4.电信		7.台湾" "	${GREEN}2.${PLAIN}三网测速(所有节点)	${GREEN}4.${PLAIN}电信		${GREEN}7.${PLAIN}台湾"
+    print_menu_line "				5.移动		8.日本" "				${GREEN}5.${PLAIN}移动		${GREEN}8.${PLAIN}日本"
+    print_menu_line "						9.新加坡" "						${GREEN}9.${PLAIN}新加坡"
     table_rule
     while :; do
-        printf '%s' "请输入数字选择测速类型: "
-        read -r selection
+        if [ -r /dev/tty ]; then
+            printf '\n%s' "请输入数字选择测速类型: " > /dev/tty
+            IFS= read -r selection < /dev/tty || selection=
+        elif [ -t 0 ]; then
+            printf '\n%s' "请输入数字选择测速类型: "
+            IFS= read -r selection || selection=
+        else
+            selection=1
+            warn "non-interactive input detected; default to test type 1"
+            return 0
+        fi
         case "$selection" in
             10|[1-9]) break ;;
             *) err "输入错误, 请输入正确的数字!" ;;
@@ -1197,19 +1217,48 @@ normalize_metric() {
     [ -n "$metric_unit" ] || metric_unit=$unit
     case "$metric_num" in
         *[!0-9.]*|'') printf '%s\n' "$cleaned" | sed 's/[[:space:]][[:space:]]*/ /g' ;;
-        *) awk -v n="$metric_num" -v u="$metric_unit" 'BEGIN{printf "%.2f %s\n", n, u}' ;;
+        *) LC_ALL=C awk -v n="$metric_num" -v u="$metric_unit" 'BEGIN{printf "%.2f %s\n", n, u}' ;;
     esac
+}
+
+extract_labeled_value() {
+    label=$1
+    log=$2
+    awk -v label="$label" '
+        $0 ~ "^[[:space:]]*" label "[[:space:]]*:" {
+            sub(/^[[:space:]]*[^:]*:[[:space:]]*/, "", $0)
+            print
+            exit
+        }
+    ' "$log"
+}
+
+extract_first_number() {
+    printf '%s\n' "$1" | awk '
+        {
+            for (i = 1; i <= NF; i++) {
+                field = $i
+                gsub(/,/, ".", field)
+                gsub(/^[^0-9.]*/, "", field)
+                gsub(/[^0-9.].*$/, "", field)
+                if (field ~ /^[0-9]+([.][0-9]+)?$/) {
+                    print field
+                    exit
+                }
+            }
+        }
+    '
 }
 
 parse_speedtest_log() {
     log=$1
-    dl=$(sed -n 's/^Download:[[:space:]]*//p' "$log" | head -1)
-    up=$(sed -n 's/^Upload:[[:space:]]*//p' "$log" | head -1)
-    latency=$(sed -n 's/^Latency:[[:space:]]*//p' "$log" | head -1)
+    dl=$(extract_labeled_value "Download" "$log")
+    up=$(extract_labeled_value "Upload" "$log")
+    latency=$(extract_labeled_value "Latency" "$log")
     dl=$(normalize_metric "$dl" "Mbps")
     up=$(normalize_metric "$up" "Mbps")
-    latency=$(printf '%s' "$latency" | sed 's/ms//;s/[[:space:]]//g')
-    [ -n "$latency" ] && latency=$(awk -v n="$latency" 'BEGIN{printf "%.2fms\n", n}') || latency="NULL"
+    latency=$(extract_first_number "$latency")
+    [ -n "$latency" ] && latency=$(LC_ALL=C awk -v n="$latency" 'BEGIN{printf "%.2fms\n", n}') || latency="NULL"
     printf '%s\t%s\t%s\n' "$up" "$dl" "$latency"
 }
 
