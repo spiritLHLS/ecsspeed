@@ -327,8 +327,8 @@ Options:
       --timeout SECONDS        HTTP timeout, default $TIMEOUT_NORMAL
       --retries N              Retry count, default $RETRIES
       --ping-concurrency N     Ping worker limit, default $PING_CONCURRENCY
-      --speedtest-go-version V Use V or "latest"; default $SPEEDTEST_GO_VERSION
-      --no-update-speedtest-go Reuse cached speedtest-go when available
+      --speedtest-go-version V Use V or "latest" for net mode; default $SPEEDTEST_GO_VERSION
+      --no-update-speedtest-go Reuse cached speedtest-go when available in net mode
       --no-precheck            Skip ping reachability precheck before speed tests
       --no-cdn                 Do not use CDN fallback
       --no-install             Do not try package-manager installs
@@ -1032,7 +1032,8 @@ fetch_cn_records() {
     printf '%s\n' "$csv" | awk -F, -v prefix="$prefix" -v exclude_hk_tw="$exclude_hk_tw" '
         function trim(s){gsub(/\r/,"",s); gsub(/^[ \t]+|[ \t]+$/,"",s); return s}
         NF >= 9 {
-            id=trim($1); host=trim($6); city=trim($9);
+            id=trim($1); https=trim($3); host=trim($6); city=trim($9);
+            ping=trim($20); download=trim($21); upload=trim($22);
             if (id == "id" || id == "" || host == "" || city == "") next;
             gsub(/ /, "", city);
             gsub(/市/, "", city);
@@ -1040,9 +1041,13 @@ fetch_cn_records() {
             if (exclude_hk_tw == "1" && (city ~ /香港/ || city ~ /台湾/)) next;
             host_base=host;
             sub(/:.*/, "", host_base);
+            scheme=(https == "1" ? "https" : "http");
+            if (ping == "") ping=scheme "://" host "/hello";
+            if (download == "") download=scheme "://" host "/download";
+            if (upload == "") upload=scheme "://" host "/upload";
             name=prefix city;
             key=host_base "|" name "|" id;
-            if (!seen[key]++) print host "\t" id "\t" name "\t" host_base "\t" host;
+            if (!seen[key]++) print host "\t" id "\t" name "\t" host_base "\t" ping "\t" download "\t" upload;
         }
     ' > "$out"
 }
@@ -1125,9 +1130,21 @@ ping_record_worker() {
     endpoint=$1
     idx=$2
     dir=$3
+    ping_url=$4
     ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
     [ -n "$ip" ] || exit 0
-    latency=$(ping_once "$ip" 2>/dev/null || true)
+    if [ "$ECSSPEED_MODE" = "cn" ] && [ -n "$ping_url" ] && command_exists curl; then
+        stat=$(curl_speed_stat "$ping_url" latency)
+        code=$(printf '%s\n' "$stat" | awk '{print $1}')
+        seconds=$(printf '%s\n' "$stat" | awk '{print $2}')
+        if valid_http_code "$code" && [ -n "$seconds" ]; then
+            latency=$(LC_ALL=C awk -v s="$seconds" 'BEGIN{printf "%.3f", s * 1000}')
+        else
+            latency=
+        fi
+    else
+        latency=$(ping_once "$ip" 2>/dev/null || true)
+    fi
     [ -n "$latency" ] || exit 0
     printf '%s\t%s\n' "$latency" "$idx" > "$dir/$idx.ping"
 }
@@ -1136,9 +1153,21 @@ ping_output_worker() {
     endpoint=$1
     idx=$2
     dir=$3
+    ping_url=$4
     ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
     [ -n "$ip" ] || exit 0
-    latency=$(ping_once "$ip" 2>/dev/null || true)
+    if [ "$ECSSPEED_MODE" = "cn" ] && [ -n "$ping_url" ] && command_exists curl; then
+        stat=$(curl_speed_stat "$ping_url" latency)
+        code=$(printf '%s\n' "$stat" | awk '{print $1}')
+        seconds=$(printf '%s\n' "$stat" | awk '{print $2}')
+        if valid_http_code "$code" && [ -n "$seconds" ]; then
+            latency=$(LC_ALL=C awk -v s="$seconds" 'BEGIN{printf "%.3f", s * 1000}')
+        else
+            latency=
+        fi
+    else
+        latency=$(ping_once "$ip" 2>/dev/null || true)
+    fi
     [ -n "$latency" ] || exit 0
     printf '%s\t%s\t%s\n' "$latency" "$idx" "$ip" > "$dir/$idx.ping"
 }
@@ -1153,10 +1182,10 @@ select_nearest() {
     mkdir -p "$pdir" || return 1
     idx=0
     active=0
-    while IFS="$(printf '\t')" read -r target id name endpoint rest || [ -n "$target" ]; do
+    while IFS="$(printf '\t')" read -r target id name endpoint ping_url download_url upload_url rest || [ -n "$target" ]; do
         idx=$((idx + 1))
-        printf '%s\t%s\t%s\t%s\t%s\n' "$target" "$id" "$name" "$endpoint" "$rest" > "$pdir/$idx.record"
-        ping_record_worker "$endpoint" "$idx" "$pdir" &
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$target" "$id" "$name" "$endpoint" "$ping_url" "$download_url" "$upload_url" > "$pdir/$idx.record"
+        ping_record_worker "$endpoint" "$idx" "$pdir" "$ping_url" &
         active=$((active + 1))
         if [ "$active" -ge "$PING_CONCURRENCY" ]; then
             wait
@@ -1180,10 +1209,10 @@ ping_records_sorted() {
     mkdir -p "$pdir" || return 1
     idx=0
     active=0
-    while IFS="$(printf '\t')" read -r target node_id name endpoint rest || [ -n "$target" ]; do
+    while IFS="$(printf '\t')" read -r target node_id name endpoint ping_url download_url upload_url rest || [ -n "$target" ]; do
         idx=$((idx + 1))
-        printf '%s\t%s\t%s\t%s\t%s\n' "$target" "$node_id" "$name" "$endpoint" "$rest" > "$pdir/$idx.record"
-        ping_output_worker "$endpoint" "$idx" "$pdir" &
+        printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$target" "$node_id" "$name" "$endpoint" "$ping_url" "$download_url" "$upload_url" > "$pdir/$idx.record"
+        ping_output_worker "$endpoint" "$idx" "$pdir" "$ping_url" &
         active=$((active + 1))
         if [ "$active" -ge "$PING_CONCURRENCY" ]; then
             wait
@@ -1192,7 +1221,7 @@ ping_records_sorted() {
     done < "$in"
     wait
     cat "$pdir"/*.ping 2>/dev/null | sort -n | while IFS="$(printf '\t')" read -r latency idx ip; do
-        IFS="$(printf '\t')" read -r target node_id name endpoint rest < "$pdir/$idx.record"
+        IFS="$(printf '\t')" read -r target node_id name endpoint ping_url download_url upload_url rest < "$pdir/$idx.record"
         printf '%s-speedtest.%s-%s\t%s\t%s\n' "$node_id" "$family" "$name" "$latency" "$ip"
     done > "$out"
     rm -rf "$pdir"
@@ -1200,7 +1229,12 @@ ping_records_sorted() {
 
 precheck_record() {
     endpoint=$1
+    ping_url=$2
     [ "$PRECHECK_NODES" = "1" ] || return 0
+    if [ "$ECSSPEED_MODE" = "cn" ] && [ -n "$ping_url" ] && command_exists curl; then
+        curl -fsSL -A "$ECSSPEED_BROWSER_UA" --connect-timeout "$TIMEOUT_SHORT" --max-time "$TIMEOUT_NORMAL" -o /dev/null "$ping_url" 2>/dev/null
+        return $?
+    fi
     ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
     [ -n "$ip" ] || return 1
     latency=$(ping_once "$ip" 2>/dev/null || true)
@@ -1225,8 +1259,8 @@ extract_labeled_value() {
     label=$1
     log=$2
     awk -v label="$label" '
-        $0 ~ "^[[:space:]]*" label "[[:space:]]*:" {
-            sub(/^[[:space:]]*[^:]*:[[:space:]]*/, "", $0)
+        $0 ~ label "[[:space:]]*:" {
+            sub(".*" label "[[:space:]]*:[[:space:]]*", "", $0)
             print
             exit
         }
@@ -1250,6 +1284,90 @@ extract_first_number() {
     '
 }
 
+format_mbps_from_bytes_per_second() {
+    bytes_per_second=$1
+    LC_ALL=C awk -v b="$bytes_per_second" 'BEGIN{printf "%.2f Mbps\n", b * 8 / 1000000}'
+}
+
+format_seconds_as_ms() {
+    seconds=$1
+    LC_ALL=C awk -v s="$seconds" 'BEGIN{printf "%.2fms\n", s * 1000}'
+}
+
+ensure_upload_payload() {
+    CN_UPLOAD_PAYLOAD="$ECSSPEED_TEMP_DIR/upload-payload.bin"
+    [ -s "$CN_UPLOAD_PAYLOAD" ] && return 0
+    dd if=/dev/zero of="$CN_UPLOAD_PAYLOAD" bs=1024 count=512 >/dev/null 2>&1
+}
+
+curl_speed_stat() {
+    stat_url=$1
+    stat_mode=$2
+    case "$stat_mode" in
+        download)
+            curl -L -A "$ECSSPEED_BROWSER_UA" --connect-timeout "$TIMEOUT_NORMAL" --max-time "$TIMEOUT_NORMAL" \
+                -o /dev/null -w '%{http_code} %{speed_download} %{size_download} %{time_total}\n' "$stat_url" 2>/dev/null || true
+            ;;
+        upload)
+            ensure_upload_payload || return 1
+            curl -L -A "$ECSSPEED_BROWSER_UA" --connect-timeout "$TIMEOUT_NORMAL" --max-time "$TIMEOUT_NORMAL" \
+                -X POST --data-binary "@$CN_UPLOAD_PAYLOAD" -o /dev/null \
+                -w '%{http_code} %{speed_upload} %{size_upload} %{time_total}\n' "$stat_url" 2>/dev/null || true
+            ;;
+        latency)
+            curl -fsSL -A "$ECSSPEED_BROWSER_UA" --connect-timeout "$TIMEOUT_SHORT" --max-time "$TIMEOUT_NORMAL" \
+                -o /dev/null -w '%{http_code} %{time_total}\n' "$stat_url" 2>/dev/null || true
+            ;;
+    esac
+}
+
+valid_http_code() {
+    case "$1" in
+        2*|3*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+measure_http_latency() {
+    ping_url=$1
+    samples=
+    i=1
+    while [ "$i" -le 3 ]; do
+        stat=$(curl_speed_stat "$ping_url" latency)
+        code=$(printf '%s\n' "$stat" | awk '{print $1}')
+        seconds=$(printf '%s\n' "$stat" | awk '{print $2}')
+        if valid_http_code "$code" && [ -n "$seconds" ]; then
+            samples="$samples $seconds"
+        fi
+        i=$((i + 1))
+    done
+    [ -n "$samples" ] || return 1
+    best=$(printf '%s\n' $samples | LC_ALL=C awk 'NR == 1 || $1 < min {min=$1} END{print min}')
+    format_seconds_as_ms "$best"
+}
+
+measure_http_speed() {
+    url=$1
+    mode=$2
+    stat=$(curl_speed_stat "$url" "$mode")
+    code=$(printf '%s\n' "$stat" | awk '{print $1}')
+    speed=$(printf '%s\n' "$stat" | awk '{print $2}')
+    size=$(printf '%s\n' "$stat" | awk '{print $3}')
+    valid_http_code "$code" || return 1
+    case "$speed" in
+        ''|*[!0-9.]*)
+            return 1
+            ;;
+    esac
+    case "$size" in
+        ''|*[!0-9.]*)
+            return 1
+            ;;
+    esac
+    LC_ALL=C awk -v s="$speed" -v z="$size" 'BEGIN{exit !(s > 0 && z > 0)}' || return 1
+    format_mbps_from_bytes_per_second "$speed"
+}
+
 parse_speedtest_log() {
     log=$1
     dl=$(extract_labeled_value "Download" "$log")
@@ -1262,11 +1380,41 @@ parse_speedtest_log() {
     printf '%s\t%s\t%s\n' "$up" "$dl" "$latency"
 }
 
+run_cn_speedtest_record() {
+    node_id=$1
+    name=$2
+    ping_url=$3
+    download_url=$4
+    upload_url=$5
+    [ -n "$ping_url" ] || return 1
+    [ -n "$download_url" ] || return 1
+    [ -n "$upload_url" ] || return 1
+    latency=$(measure_http_latency "$ping_url" 2>/dev/null || true)
+    dl=$(measure_http_speed "$download_url" download 2>/dev/null || true)
+    up=$(measure_http_speed "$upload_url" upload 2>/dev/null || true)
+    [ -n "$latency" ] || latency="NULL"
+    [ -n "$dl" ] || dl="NULL"
+    [ -n "$up" ] || up="NULL"
+    if [ "$up$dl$latency" != "NULLNULLNULL" ]; then
+        emit_speed_result "$node_id" "$name" "$up" "$dl" "$latency" "ok" ""
+        return 0
+    fi
+    emit_speed_result "$node_id" "$name" "NULL" "NULL" "NULL" "failed" "speedtest.cn http probe failed"
+    return 1
+}
+
 run_speedtest_record() {
     target=$1
     node_id=$2
     name=$3
     endpoint=$4
+    ping_url=$5
+    download_url=$6
+    upload_url=$7
+    if [ "$ECSSPEED_MODE" = "cn" ]; then
+        run_cn_speedtest_record "$node_id" "$name" "$ping_url" "$download_url" "$upload_url"
+        return $?
+    fi
     log="$ECSSPEED_TEMP_DIR/speedtest-${node_id}.log"
     tries=1
     delay=1
@@ -1318,14 +1466,14 @@ emit_speed_result() {
 test_records() {
     records=$1
     [ -s "$records" ] || { warn "no server records available"; return 0; }
-    while IFS="$(printf '\t')" read -r target node_id name endpoint rest || [ -n "$target" ]; do
+    while IFS="$(printf '\t')" read -r target node_id name endpoint ping_url download_url upload_url rest || [ -n "$target" ]; do
         [ -n "$target" ] || continue
-        if ! precheck_record "$endpoint"; then
+        if ! precheck_record "$endpoint" "$ping_url"; then
             warn "$node_id $name unreachable, skipped"
             printf 'speed\t%s\t%s\t%s\tNULL\tNULL\tNULL\tskipped\tunreachable\n' "$ECSSPEED_MODE" "$node_id" "$name" >> "$RESULTS_FILE"
             continue
         fi
-        run_speedtest_record "$target" "$node_id" "$name" "$endpoint" || true
+        run_speedtest_record "$target" "$node_id" "$name" "$endpoint" "$ping_url" "$download_url" "$upload_url" || true
     done < "$records"
 }
 
@@ -1337,8 +1485,12 @@ run_speed_mode() {
         1|2|3|4|5|6|7|8|9) ;;
         *) die "invalid test type: $selection" ;;
     esac
-    ensure_speedtest_go || die "speedtest-go is unavailable for this system"
-    info "speedtest-go: $(cat "$SPEEDTEST_VERSION_FILE" 2>/dev/null || printf unknown)"
+    if [ "$ECSSPEED_MODE" = "net" ]; then
+        ensure_speedtest_go || die "speedtest-go is unavailable for this system"
+        info "speedtest-go: $(cat "$SPEEDTEST_VERSION_FILE" 2>/dev/null || printf unknown)"
+    else
+        ensure_command curl "curl" || die "curl is required for ecsspeed-cn HTTP speed tests"
+    fi
     START_TIME=$(date +%s)
     warn "checking speedtest servers"
     records="$ECSSPEED_TEMP_DIR/selected.records"

@@ -38,7 +38,7 @@ wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS
 
 支持国内服务器测试(有判断是否为国内机器)，但由于国内服务器带宽过小，会很慢，详见初次运行的显示
 
-默认优先使用 [speedtest-go](https://github.com/showwin/speedtest-go) 测速，并在运行时自动检测版本和校验下载文件
+默认使用 [speedtest-go](https://github.com/showwin/speedtest-go) 测速，并在运行时自动检测版本和校验下载文件
 
 </details>
 
@@ -72,6 +72,8 @@ wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS
 
 支持国内服务器测试(有判断是否为国内机器)，但由于国内服务器带宽过小，会很慢，详见初次运行的显示
   
+使用 speedtest.cn 节点列表中的 `pingUrl`、`downloadUrl`、`uploadUrl` 直接完成延迟、下载和上传测试。
+
 </details>
 
 ![图片](https://github.com/spiritLHLS/ecsspeed/assets/103393591/eb2ac1fd-6cc4-4a7b-846f-b47bb5970e16)
@@ -127,7 +129,7 @@ sh script/ecsspeed-ping.sh -log ping.log
 - `--work-dir DIR`：指定测速二进制、日志和缓存目录。
 - `--no-precheck`：跳过测速前节点连通性预检。
 
-脚本默认优先使用 [speedtest-go](https://github.com/showwin/speedtest-go)，运行时检测最新版本并通过官方 `checksums.txt` 进行 SHA256 校验后安装。支持 Linux、macOS、FreeBSD、OpenBSD 常见架构，包括 x86_64、i386、arm64、armv5/6/7、s390x、riscv64、ppc64le、ppc64、loong64 和部分 mips 变体。
+`ecsspeed-net` 默认使用 [speedtest-go](https://github.com/showwin/speedtest-go)，运行时检测最新版本并通过官方 `checksums.txt` 进行 SHA256 校验后安装。支持 Linux、macOS、FreeBSD、OpenBSD 常见架构，包括 x86_64、i386、arm64、armv5/6/7、s390x、riscv64、ppc64le、ppc64、loong64 和部分 mips 变体。`ecsspeed-cn` 使用 speedtest.cn 节点列表中的 HTTP 测速地址，`ecsspeed-ping` 执行节点延迟探测。
 
 ## .cn数据
 
