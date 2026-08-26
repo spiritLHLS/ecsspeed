@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Shared POSIX sh runtime for ecsspeed entrypoint scripts.
 
-ECSSPEED_SCRIPT_VERSION="2026/08/25"
+ECSSPEED_SCRIPT_VERSION="2026/08/26"
 ECSSPEED_DEFAULT_SPEEDTEST_GO_VERSION="latest"
 ECSSPEED_FALLBACK_SPEEDTEST_GO_VERSION="1.8.1"
 ECSSPEED_BROWSER_UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36"
@@ -36,9 +36,7 @@ ecsspeed_main() {
     ensure_command sed "sed"
     ensure_command sort "sort"
     ensure_command grep "grep"
-    if [ "$PRECHECK_NODES" = "1" ]; then
-        ensure_command ping "iputils-ping ping" || PRECHECK_NODES=0
-    fi
+    [ "$ECSSPEED_MODE" != "ping" ] || ensure_command ping "iputils-ping ping"
     case "$ECSSPEED_MODE" in
         cn|ping) ensure_resolver ;;
     esac
@@ -329,7 +327,7 @@ Options:
       --ping-concurrency N     Ping worker limit, default $PING_CONCURRENCY
       --speedtest-go-version V Use V or "latest" for net mode; default $SPEEDTEST_GO_VERSION
       --no-update-speedtest-go Reuse cached speedtest-go when available in net mode
-      --no-precheck            Skip ping reachability precheck before speed tests
+      --no-precheck            Skip advisory HTTP/TCP/ICMP reachability precheck before speed tests
       --no-cdn                 Do not use CDN fallback
       --no-install             Do not try package-manager installs
       --china, --no-china      Force or disable China mirror behavior
@@ -841,6 +839,17 @@ strip_host_port() {
     esac
 }
 
+endpoint_host() {
+    eph_value=$1
+    case "$eph_value" in
+        *://*)
+            eph_value=${eph_value#*://}
+            eph_value=${eph_value%%/*}
+            ;;
+    esac
+    strip_host_port "$eph_value"
+}
+
 is_ipv4() {
     ip=$1
     printf '%s\n' "$ip" | awk -F. 'NF==4 {for(i=1;i<=4;i++){if($i !~ /^[0-9]+$/ || $i<0 || $i>255) exit 1} exit 0} {exit 1}'
@@ -1012,13 +1021,18 @@ fetch_net_records() {
     printf '%s\n' "$csv" | awk -F, -v prefix="$prefix" '
         function trim(s){gsub(/\r/,"",s); gsub(/^[ \t]+|[ \t]+$/,"",s); return s}
         NF >= 5 {
-            id=trim($1); city=trim($4); ip=trim($5); host=trim($6);
+            id=trim($1); city=trim($4); ip=trim($5); host=trim($6); port=trim($7);
             if (id == "id" || id == "" || city == "" || ip == "") next;
             gsub(/ /, "", city);
             name=prefix city;
             sub(/^日本日本/, "日本", name);
-            key=id "|" name "|" host "|" ip;
-            if (!seen[key]++) print id "\t" id "\t" name "\t" ip "\t" host;
+            endpoint=ip;
+            if (port ~ /^[0-9]+$/ && port != "0") {
+                if (ip ~ /:/ && ip !~ /^\[/) endpoint="[" ip "]:" port;
+                else endpoint=ip ":" port;
+            }
+            key=id "|" name "|" host "|" endpoint;
+            if (!seen[key]++) print id "\t" id "\t" name "\t" endpoint "\t" host;
         }
     ' > "$out"
 }
@@ -1039,15 +1053,13 @@ fetch_cn_records() {
             gsub(/市/, "", city);
             gsub(/中国/, "", city);
             if (exclude_hk_tw == "1" && (city ~ /香港/ || city ~ /台湾/)) next;
-            host_base=host;
-            sub(/:.*/, "", host_base);
             scheme=(https == "1" ? "https" : "http");
             if (ping == "") ping=scheme "://" host "/hello";
             if (download == "") download=scheme "://" host "/download";
             if (upload == "") upload=scheme "://" host "/upload";
             name=prefix city;
-            key=host_base "|" name "|" id;
-            if (!seen[key]++) print host "\t" id "\t" name "\t" host_base "\t" ping "\t" download "\t" upload;
+            key=host "|" name "|" id;
+            if (!seen[key]++) print host "\t" id "\t" name "\t" host "\t" ping "\t" download "\t" upload;
         }
     ' > "$out"
 }
@@ -1126,27 +1138,40 @@ nearest_three_cn() {
     cat "$ECSSPEED_TEMP_DIR/unicom.nearest" "$ECSSPEED_TEMP_DIR/telecom.nearest" "$ECSSPEED_TEMP_DIR/mobile.nearest" > "$ntc_out"
 }
 
-ping_record_worker() {
+reachability_record_worker() {
     endpoint=$1
     idx=$2
     dir=$3
     ping_url=$4
-    ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
-    [ -n "$ip" ] || exit 0
+    method=
+    latency=
     if [ "$ECSSPEED_MODE" = "cn" ] && [ -n "$ping_url" ] && command_exists curl; then
-        stat=$(curl_speed_stat "$ping_url" latency)
-        code=$(printf '%s\n' "$stat" | awk '{print $1}')
-        seconds=$(printf '%s\n' "$stat" | awk '{print $2}')
-        if valid_http_code "$code" && [ -n "$seconds" ]; then
-            latency=$(LC_ALL=C awk -v s="$seconds" 'BEGIN{printf "%.3f", s * 1000}')
-        else
-            latency=
-        fi
-    else
-        latency=$(ping_once "$ip" 2>/dev/null || true)
+        latency=$(http_probe_latency "$ping_url" 2>/dev/null || true)
+        [ -n "$latency" ] && method=http
     fi
-    [ -n "$latency" ] || exit 0
-    printf '%s\t%s\n' "$latency" "$idx" > "$dir/$idx.ping"
+    if [ -z "$method" ]; then
+        latency=$(tcp_probe_latency "$endpoint" "$ping_url" 2>/dev/null || true)
+        [ -n "$latency" ] && method=tcp
+    fi
+    if [ -z "$method" ]; then
+        ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
+        if [ -n "$ip" ]; then
+            latency=$(ping_once "$ip" 2>/dev/null || true)
+            [ -n "$latency" ] && method=icmp
+        fi
+    fi
+    case "$method" in
+        http) score=0 ;;
+        tcp) score=1 ;;
+        icmp) score=2 ;;
+        *)
+            # A filtered or temporarily unreachable advisory probe does not
+            # prove that the speed-test service is unavailable.
+            score=3
+            latency=999999999
+            ;;
+    esac
+    printf '%s\t%s\t%s\t%s\n' "$score" "$latency" "$idx" "${method:-candidate}" > "$dir/$idx.probe"
 }
 
 ping_output_worker() {
@@ -1178,6 +1203,10 @@ select_nearest() {
     count=$3
     : > "$out"
     [ -s "$in" ] || return 0
+    if [ "$PRECHECK_NODES" != "1" ]; then
+        sed -n "1,${count}p" "$in" > "$out"
+        return 0
+    fi
     pdir="$ECSSPEED_TEMP_DIR/ping.$$.$(basename "$out")"
     mkdir -p "$pdir" || return 1
     idx=0
@@ -1185,7 +1214,7 @@ select_nearest() {
     while IFS="$(printf '\t')" read -r target id name endpoint ping_url download_url upload_url rest || [ -n "$target" ]; do
         idx=$((idx + 1))
         printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$target" "$id" "$name" "$endpoint" "$ping_url" "$download_url" "$upload_url" > "$pdir/$idx.record"
-        ping_record_worker "$endpoint" "$idx" "$pdir" "$ping_url" &
+        reachability_record_worker "$endpoint" "$idx" "$pdir" "$ping_url" &
         active=$((active + 1))
         if [ "$active" -ge "$PING_CONCURRENCY" ]; then
             wait
@@ -1193,9 +1222,15 @@ select_nearest() {
         fi
     done < "$in"
     wait
-    cat "$pdir"/*.ping 2>/dev/null | sort -n | head -n "$count" | while IFS="$(printf '\t')" read -r latency idx; do
-        cat "$pdir/$idx.record"
-    done > "$out"
+    ranked="$pdir/ranked"
+    cat "$pdir"/*.probe 2>/dev/null | sort -t "$(printf '\t')" -k1,1n -k2,2n -k3,3n > "$ranked"
+    if [ -s "$ranked" ]; then
+        head -n "$count" "$ranked" | while IFS="$(printf '\t')" read -r score latency idx method; do
+            cat "$pdir/$idx.record"
+        done > "$out"
+    else
+        sed -n "1,${count}p" "$in" > "$out"
+    fi
     rm -rf "$pdir"
 }
 
@@ -1227,18 +1262,112 @@ ping_records_sorted() {
     rm -rf "$pdir"
 }
 
+endpoint_port() {
+    epp_endpoint=$1
+    case "$epp_endpoint" in
+        *://*)
+            epp_endpoint=${epp_endpoint#*://}
+            epp_endpoint=${epp_endpoint%%/*}
+            ;;
+    esac
+    epp_port=
+    case "$epp_endpoint" in
+        \[*\]:[0-9]*) epp_port=${epp_endpoint##*:} ;;
+        *:*:*) ;;
+        *:[0-9]*) epp_port=${epp_endpoint##*:} ;;
+    esac
+    case "$epp_port" in
+        ''|*[!0-9]*|0) return 1 ;;
+    esac
+    printf '%s\n' "$epp_port"
+}
+
+tcp_probe_latency() {
+    tcp_endpoint=$1
+    tcp_fallback=$2
+    command_exists curl || return 1
+    tcp_host=$(endpoint_host "$tcp_endpoint")
+    [ -n "$tcp_host" ] || tcp_host=$(endpoint_host "$tcp_fallback")
+    [ -n "$tcp_host" ] || return 1
+    tcp_fallback_host=$(endpoint_host "$tcp_fallback")
+    tcp_port=$(endpoint_port "$tcp_endpoint" 2>/dev/null || endpoint_port "$tcp_fallback" 2>/dev/null || true)
+    [ -n "$tcp_port" ] || tcp_port=80
+    if is_ipv6 "$tcp_host"; then
+        tcp_url="http://[$tcp_host]:$tcp_port/"
+    else
+        tcp_url="http://$tcp_host:$tcp_port/"
+    fi
+    # --connect-only is not compiled into every curl build (including some
+    # current macOS packages). A direct request still reports time_connect
+    # after the TCP handshake even when the service rejects the HTTP payload.
+    # Do not use the HTTP status or curl's final exit code as the TCP result.
+    tcp_seconds=$(curl -sS --noproxy '*' --connect-timeout "$TIMEOUT_SHORT" --max-time "$TIMEOUT_NORMAL" \
+        -o /dev/null -w '%{time_connect}' "$tcp_url" 2>/dev/null || true)
+    case "$tcp_seconds" in
+        ''|*[!0-9.]*) tcp_seconds= ;;
+    esac
+    if [ -n "$tcp_seconds" ] && LC_ALL=C awk -v s="$tcp_seconds" 'BEGIN{exit !(s > 0)}'; then
+        LC_ALL=C awk -v s="$tcp_seconds" 'BEGIN{printf "%.3f", s * 1000}'
+        return 0
+    fi
+
+    # A proxy may be the only allowed egress path. In that case a normal HTTP
+    # request with a real, non-5xx response confirms that the service path was
+    # reached even though a direct TCP SYN was blocked locally.
+    tcp_proxy_host=${tcp_fallback_host:-$tcp_host}
+    if is_ipv6 "$tcp_proxy_host"; then
+        tcp_proxy_url="http://[$tcp_proxy_host]:$tcp_port/"
+    else
+        tcp_proxy_url="http://$tcp_proxy_host:$tcp_port/"
+    fi
+    tcp_proxy_stat=$(curl -sS --connect-timeout "$TIMEOUT_SHORT" --max-time "$TIMEOUT_NORMAL" \
+        -o /dev/null -w '%{http_code} %{time_total}' "$tcp_proxy_url" 2>/dev/null || true)
+    tcp_proxy_code=$(printf '%s\n' "$tcp_proxy_stat" | awk '{print $1}')
+    tcp_proxy_seconds=$(printf '%s\n' "$tcp_proxy_stat" | awk '{print $2}')
+    case "$tcp_proxy_code" in
+        2*|3*|4*) [ "$tcp_proxy_code" != "407" ] || return 1 ;;
+        *) return 1 ;;
+    esac
+    case "$tcp_proxy_seconds" in
+        ''|*[!0-9.]*) return 1 ;;
+    esac
+    LC_ALL=C awk -v s="$tcp_proxy_seconds" 'BEGIN{if (s >= 0) printf "%.3f", s * 1000; else exit 1}'
+}
+
+tcp_precheck_endpoint() {
+    tcp_probe_latency "$1" "$2" >/dev/null
+}
+
+http_probe_latency() {
+    hpl_url=$1
+    [ -n "$hpl_url" ] || return 1
+    command_exists curl || return 1
+    hpl_stat=$(curl_speed_stat "$hpl_url" latency)
+    hpl_code=$(printf '%s\n' "$hpl_stat" | awk '{print $1}')
+    hpl_seconds=$(printf '%s\n' "$hpl_stat" | awk '{print $2}')
+    valid_http_code "$hpl_code" || return 1
+    case "$hpl_seconds" in
+        ''|*[!0-9.]*) return 1 ;;
+    esac
+    LC_ALL=C awk -v s="$hpl_seconds" 'BEGIN{if (s >= 0) printf "%.3f", s * 1000; else exit 1}'
+}
+
 precheck_record() {
     endpoint=$1
     ping_url=$2
     [ "$PRECHECK_NODES" = "1" ] || return 0
     if [ "$ECSSPEED_MODE" = "cn" ] && [ -n "$ping_url" ] && command_exists curl; then
-        curl -fsSL -A "$ECSSPEED_BROWSER_UA" --connect-timeout "$TIMEOUT_SHORT" --max-time "$TIMEOUT_NORMAL" -o /dev/null "$ping_url" 2>/dev/null
-        return $?
+        http_probe_latency "$ping_url" >/dev/null && return 0
     fi
+    tcp_precheck_endpoint "$endpoint" "$ping_url" && return 0
     ip=$(clean_endpoint_ip "$endpoint" 2>/dev/null || true)
-    [ -n "$ip" ] || return 1
-    latency=$(ping_once "$ip" 2>/dev/null || true)
-    [ -n "$latency" ]
+    if [ -n "$ip" ]; then
+        latency=$(ping_once "$ip" 2>/dev/null || true)
+        [ -n "$latency" ] && return 0
+    fi
+    # No single advisory signal is a hard availability gate. The subsequent
+    # speedtest client has its own retries and is the authoritative check.
+    return 0
 }
 
 normalize_metric() {

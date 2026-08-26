@@ -34,7 +34,7 @@ wget -qO- https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS
 
 支持测速的架构：i386, x86_64, amd64, arm64, s390x, riscv64, ppc64le, ppc64
 
-涵盖中国三大运营商、香港、台湾的测速节点，默认的三网测速每个运营商选择本机ping值最低的两个节点测速，详情三网测速才是全测，节点列表大概每7天自动更新一次。
+涵盖中国三大运营商、香港、台湾的测速节点，默认的三网测速每个运营商优先选择本机低延迟节点测速，详情三网测速才是全测，节点列表大概每7天自动更新一次。ICMP Ping 被过滤时不会直接丢弃节点，预检会优先接受 HTTP 或 TCP connect/TCPing，仍无结论时交由真实测速重试判定。
 
 支持国内服务器测试(有判断是否为国内机器)，但由于国内服务器带宽过小，会很慢，详见初次运行的显示
 
@@ -127,7 +127,7 @@ sh script/ecsspeed-ping.sh -log ping.log
 - `-log, --log [FILE]`：记录运行日志，未指定文件时写入工作目录。
 - `-c, --config FILE`：读取配置文件，可配置 `TIMEOUT`、`RETRIES`、`PING_CONCURRENCY`、`CDN_URLS`、`SPEEDTEST_GO_VERSION` 等。
 - `--work-dir DIR`：指定测速二进制、日志和缓存目录。
-- `--no-precheck`：跳过测速前节点连通性预检。
+- `--no-precheck`：跳过测速前的 HTTP/TCP/ICMP 建议性连通预检。
 
 `ecsspeed-net` 默认使用 [speedtest-go](https://github.com/showwin/speedtest-go)，运行时检测最新版本并通过官方 `checksums.txt` 进行 SHA256 校验后安装。支持 Linux、macOS、FreeBSD、OpenBSD 常见架构，包括 x86_64、i386、arm64、armv5/6/7、s390x、riscv64、ppc64le、ppc64、loong64 和部分 mips 变体。`ecsspeed-cn` 使用 speedtest.cn 节点列表中的 HTTP 测速地址，`ecsspeed-ping` 执行节点延迟探测。
 
