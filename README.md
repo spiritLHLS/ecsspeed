@@ -143,7 +143,7 @@ sh script/ecsspeed-ping.sh -log ping.log
 
 https://github.com/oneclickvirt/ecs
 
-包含部分私有国内测速节点，不进行公开，但支持更多的地区
+支持更多地区的测速数据，具体以运行时可用的公开数据为准
 
 ### 交流
 
